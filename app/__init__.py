@@ -1,4 +1,5 @@
 from flask import Flask, request, make_response, render_template
+from flask.ext.cors import CORS
 
 import requests
 import json
@@ -14,12 +15,56 @@ load_dotenv(dotenv_path)
 TFL_APP_ID = os.environ.get("TFL_APP_ID")
 TFL_APP_KEY = os.environ.get("TFL_APP_KEY")
 EVENTBRITE_TOKEN = os.environ.get("EVENTBRITE_TOKEN")
+FORECAST_API_KEY = os.environ.get("FORECAST_API_KEY")
+DEBUG = (os.environ.get("DEBUG") == "true")
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/")
 def hello():
 	return render_template("index.html")
+
+@app.route("/googleplaces")
+def googleplaces():
+	resp = make_response('[{"test":"ok"}]', 200)
+	resp.headers['Content-Type'] = "application/json"
+	return resp
+
+@app.route("/forecast")
+def forecast():
+	# ?lat=51.5218991&lon=-0.1381519
+	# https://api.forecast.io/forecast/APIKEY/LATITUDE,LONGITUDE
+	base_url = "https://api.forecast.io/forecast/"+FORECAST_API_KEY+"/"
+	params = {
+		"extend":"hourly",
+		"units":"si",
+		"exclude":",".join([
+			"currently",
+			"minutely",
+			"alerts",
+			"flags"
+		])
+	}
+	if 'lat' in request.args and 'lon' in request.args:
+		if 'time' in request.args:
+			r = requests.get(base_url+request.args['lat']+","+request.args['lon']+","+request.args['time'], params=params)
+		else:
+			r = requests.get(base_url+request.args['lat']+","+request.args['lon'], params=params)
+	else:
+		resp = make_response(json.dumps({"error":"lat and lon are required parameters"}), 400)
+		resp.headers['Content-Type'] = "application/json"
+		return resp
+
+
+	if r.status_code == requests.codes.ok:
+		resp = make_response(r.text, 200)
+		resp.headers['Content-Type'] = r.headers.get('content-type')
+		return resp
+	else:
+		resp = make_response(r.text, r.status_code)
+		resp.headers['Content-Type'] = r.headers.get('content-type')
+		return resp
 
 @app.route("/tfl/<path:api_path>")
 def tfl(api_path):
@@ -34,7 +79,8 @@ def tfl(api_path):
 		resp.headers['Content-Type'] = r.headers.get('content-type')
 		return resp
 	else:
-		resp = make_response(r.text, 404)
+		resp = make_response(r.text, r.status_code)
+		resp.headers['Content-Type'] = r.headers.get('content-type')
 		return resp
 
 @app.route("/eventbrite_raw/<path:api_path>")
@@ -143,11 +189,35 @@ def recode_eventbrite_category(id):
 	cats = {
 		"110": "Food & Drink"
 	}
+	# recode by name - TODO get ids
+	by_name = {
+		"Film, Media & Entertainment": "Culture & Art",
+		"Performing & Visual Arts":    "Culture & Art",
+		"Community & Culture":         "Culture & Art",
+		"Music":                       "Culture & Art",
+
+		"Religion & Spirituality": "Business & Education",
+		"Family & Education":      "Business & Education",
+		"Science & Technology":    "Business & Education",
+		"Government & Politics":   "Business & Education",
+		"Business & Professional": "Business & Education",
+
+		"Seasonal & Holiday": "Sport & Travel",
+		"Sports & Fitness":   "Sport & Travel",
+		"Travel & Outdoor":   "Sport & Travel",
+		"Auto, Boat & Air":   "Sport & Travel",
+
+		"Fashion & Beauty":  "Fashion & Health",
+		"Health & Wellness": "Fashion & Health",
+
+		"Food & Drink": "Food & Drink"
+	}
+
 	if id in cats:
 		return cats[id]
 	else:
 		return "Other"
 
-app.debug = True
+app.debug = DEBUG
 if __name__ == "__main__":
     app.run()

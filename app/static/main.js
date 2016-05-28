@@ -49,7 +49,7 @@ function preUpdate(will_render) {
 		if (!will_render) {
 				return;
 		}
-		// daycycle();
+		daycycle();
 }
 
 function postUpdate() {
@@ -61,16 +61,16 @@ function daycycle() {
 
 		x = Math.sin(t);
 		y = Math.sin(t+(3.14159/2)); // 1/4 offset
-		// z = Math.sin(t+(3.14159)); // 1/2 offset
+		z = Math.sin(t+(3.14159)); // 1/2 offset
 
-		// scene.view.camera.axis = {x: x, y: y};
+		scene.view.camera.axis = {x: x, y: y};
 
 		// offset blue and red for sunset and moonlight effect
-		// B = x + Math.abs(Math.sin(t+(3.14159*0.5)))/4;
-		// R = y + Math.abs(Math.sin(t*2))/4;
+		B = x + Math.abs(Math.sin(t+(3.14159*0.5)))/4;
+		R = y + Math.abs(Math.sin(t*2))/4;
 
-		// scene.lights.sun.diffuse = [R, y, B, 1];
-		// scene.lights.sun.direction = [x, 1, -0.5];
+		scene.lights.sun.diffuse = [R, y, B, 1];
+		scene.lights.sun.direction = [x, 1, -0.5];
 
 		px = Math.min(x, 0); // positive x
 		py = Math.min(y, 0); // positive y
@@ -81,8 +81,8 @@ function daycycle() {
 		scene.styles.water.material.diffuse.amount = [py+1, py+1, py+1, 1];
 
 		// turn up buildings' ambient response at night
-		// ba = -py*0.75+0.75;
-		// scene.styles.buildings.material.ambient.amount = [ba, ba, ba, 1];
+		ba = -py*0.75+0.75;
+		scene.styles.buildings.material.ambient.amount = [ba, ba, ba, 1];
 
 		scene.animated = true;
 }
