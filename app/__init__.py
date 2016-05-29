@@ -156,7 +156,7 @@ def eventbrite_scraped():
 								'POINT(%s %s)'
 								, 4326
 							)::geography,
-							300 --meters??
+							300 --meters radius
 						))
 					as f)
 				as fc;"""
@@ -171,57 +171,101 @@ def eventbrite_scraped():
 		resp.headers['Content-Type'] = "application/json"
 		return resp
 
-
-
-@app.route("/eventbrite_raw/<path:api_path>")
-def eventbrite_events(api_path):
-	# expect full api path and params (except token)
-	# /events/search/
-	# ?location.latitude=51.5218991&location.longitude=-0.1381519&location.within=1km&expand=category,ticket_classes,venue
-	# &start_date.range_start=2016-05-24T00:00:00&start_date.range_end=2016-05-30T23:59:00
-	base_url = "https://www.eventbriteapi.com/v3/"
-	headers = {
-		"Authorization": "Bearer "+EVENTBRITE_TOKEN,
-	}
-	r = requests.get(base_url+api_path, params = request.args, headers = headers)
-
-	if r.status_code == requests.codes.ok:
-		resp = make_response(r.text, 200)
-		resp.headers['Content-Type'] = r.headers.get('content-type')
-		return resp
-	else:
-		resp = make_response(r.text, r.status_code)
-		resp.headers['Content-Type'] = r.headers.get('content-type')
-		return resp
-
-@app.route("/eventbrite_live")
-def eventbrite_treated():
+@app.route("/dbpedia")
+def dbpedia():
 	# expect lat and lon, eg:
 	# ?lat=51.5218991&lon=-0.1381519
-
-	base_url = "https://www.eventbriteapi.com/v3/events/search/"
-	headers = {
-		"Authorization": "Bearer "+EVENTBRITE_TOKEN,
-	}
-	args = {
-		"location.latitude": request.args.get("lat"),
-		"location.longitude": request.args.get("lon"),
-		"location.within": "1km",
-		"start_date.range_start": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-		"start_date.range_end":  (datetime.now()+timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S"), #"2016-03-30T21:00:00",
-		"expand": "ticket_classes,venue"
-	}
-
-	r = requests.get(base_url, params = args, headers = headers)
-
-	if r.status_code == requests.codes.ok:
-		body = events.process_events_json(r.json())
-		resp = make_response(json.dumps(body), 200)
-		resp.headers['Content-Type'] = r.headers.get('content-type')
+	if 'lat' in request.args and 'lon' in request.args:
+		lat = float(request.args['lat'])
+		lon = float(request.args['lon'])
+		conn = psycopg2.connect("dbname=tom user=tom")
+		cur = conn.cursor()
+		sql = """
+			SELECT row_to_json(fc) FROM (
+				SELECT
+					'FeatureCollection' as type,
+					array_to_json(array_agg(f)) as features FROM (
+						SELECT
+							'Feature' as type,
+							ST_AsGeoJSON(row.the_geog)::json as geometry,
+							row_to_json((
+								SELECT props FROM (
+									SELECT
+									b as base,
+									u as url,
+									d as description
+								) as props
+							)) as properties
+						FROM dbpedia as row WHERE ST_DWithin(
+							row.the_geog,
+							ST_GeomFromText(
+								'POINT(%s %s)'
+								, 4326
+							)::geography,
+							300 --meters
+						))
+					as f)
+				as fc;"""
+		values = (lon,lat)
+		cur.execute(sql,values)
+		out = cur.fetchone()
+		resp = make_response(json.dumps(out[0]), 200)
+		resp.headers['Content-Type'] = "application/json"
 		return resp
 	else:
-		resp = make_response(r.text, r.status_code)
-		resp.headers['Content-Type'] = r.headers.get('content-type')
+		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
+		resp.headers['Content-Type'] = "application/json"
+		return resp
+
+@app.route("/plaques")
+def plaques():
+	# expect lat and lon, eg:
+	# ?lat=51.5218991&lon=-0.1381519
+	if 'lat' in request.args and 'lon' in request.args:
+		lat = float(request.args['lat'])
+		lon = float(request.args['lon'])
+		conn = psycopg2.connect("dbname=tom user=tom")
+		cur = conn.cursor()
+		sql = """
+			SELECT row_to_json(fc) FROM (
+				SELECT
+					'FeatureCollection' as type,
+					array_to_json(array_agg(f)) as features FROM (
+						SELECT
+							'Feature' as type,
+							ST_AsGeoJSON(row.the_geog)::json as geometry,
+							row_to_json((
+								SELECT props FROM (
+									SELECT
+									inscription,
+									colour,
+									lead_subject_name,
+									lead_subject_type,
+									lead_subject_wikipedia,
+									lead_subject_born_in,
+									lead_subject_died_in,
+									main_photo
+								) as props
+							)) as properties
+						FROM plaques as row WHERE ST_DWithin(
+							row.the_geog,
+							ST_GeomFromText(
+								'POINT(%s %s)'
+								, 4326
+							)::geography,
+							300 --meters
+						))
+					as f)
+				as fc;"""
+		values = (lon,lat)
+		cur.execute(sql,values)
+		out = cur.fetchone()
+		resp = make_response(json.dumps(out[0]), 200)
+		resp.headers['Content-Type'] = "application/json"
+		return resp
+	else:
+		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
+		resp.headers['Content-Type'] = "application/json"
 		return resp
 
 app.debug = DEBUG
