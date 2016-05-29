@@ -53,7 +53,7 @@ def place_route():
 		resp.headers['Content-Type'] = "application/json"
 		return resp
 	else:
-		resp = make_response(json.dumps({"error":"lat, lon and type are required parameters"}), 400)
+		resp = make_response(json.dumps({"error":"lat, lon and type are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
 		resp.headers['Content-Type'] = "application/json"
 		return resp
 
@@ -91,7 +91,7 @@ def forecast():
 		resp.headers['Content-Type'] = "application/json"
 		return resp
 	else:
-		resp = make_response(json.dumps({"error":"lat and lon are required parameters"}), 400)
+		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
 		resp.headers['Content-Type'] = "application/json"
 		return resp
 
@@ -114,6 +114,65 @@ def tfl(api_path):
 		resp.headers['Content-Type'] = r.headers.get('content-type')
 		return resp
 
+@app.route("/eventbrite")
+def eventbrite_scraped():
+	# expect lat and lon, eg:
+	# ?lat=51.5218991&lon=-0.1381519
+
+	if 'lat' in request.args and 'lon' in request.args:
+		lat = float(request.args['lat'])
+		lon = float(request.args['lon'])
+		conn = psycopg2.connect("dbname=tom user=tom")
+		cur = conn.cursor()
+		sql = """
+			SELECT row_to_json(fc) FROM (
+				SELECT
+					'FeatureCollection' as type,
+					array_to_json(array_agg(f)) as features FROM (
+						SELECT
+							'Feature' as type,
+							ST_AsGeoJSON(row.the_geog)::json as geometry,
+							row_to_json((
+								SELECT props FROM (
+									SELECT
+									name,
+									description,
+									url,
+									category,
+									start_time as start,
+									end_time as end,
+									postcode,
+									address,
+									free,
+									min,
+									max,
+									availability,
+									donation
+								) as props
+							)) as properties
+						FROM events as row WHERE ST_DWithin(
+							row.the_geog,
+							ST_GeomFromText(
+								'POINT(%s %s)'
+								, 4326
+							)::geography,
+							300 --meters??
+						))
+					as f)
+				as fc;"""
+		values = (lon,lat)
+		cur.execute(sql,values)
+		out = cur.fetchone()
+		resp = make_response(json.dumps(out[0]), 200)
+		resp.headers['Content-Type'] = "application/json"
+		return resp
+	else:
+		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
+		resp.headers['Content-Type'] = "application/json"
+		return resp
+
+
+
 @app.route("/eventbrite_raw/<path:api_path>")
 def eventbrite_events(api_path):
 	# expect full api path and params (except token)
@@ -135,10 +194,11 @@ def eventbrite_events(api_path):
 		resp.headers['Content-Type'] = r.headers.get('content-type')
 		return resp
 
-@app.route("/eventbrite")
+@app.route("/eventbrite_live")
 def eventbrite_treated():
 	# expect lat and lon, eg:
 	# ?lat=51.5218991&lon=-0.1381519
+
 	base_url = "https://www.eventbriteapi.com/v3/events/search/"
 	headers = {
 		"Authorization": "Bearer "+EVENTBRITE_TOKEN,
