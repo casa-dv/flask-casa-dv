@@ -36,6 +36,7 @@ def process_events_json(data):
 			event = {
 				"properties": {
 					"name":         e['name']['html'],
+					"event_id":     e['id'],
 					"description":  e['description']['text'],
 					"url":          e['url'],
 					"category":     recode_eventbrite_category(e['category_id']),

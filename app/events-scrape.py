@@ -1,6 +1,6 @@
  # -*- coding: utf-8 -*-
 import requests
-import datetime
+from datetime import datetime, timedelta
 import psycopg2
 
 import os
@@ -15,6 +15,7 @@ def save_features(features, conn, cur):
 
 def save_feature(feature,conn,cur):
 	sql = """INSERT INTO events (
+			event_id,
 			the_geog,
 			name,
 			description,
@@ -30,6 +31,7 @@ def save_feature(feature,conn,cur):
 			availability,
 			donation
 		) VALUES (
+			%s,
 			ST_GeomFromText('POINT(%s %s)', 4326),
 			%s,
 			%s,
@@ -46,6 +48,7 @@ def save_feature(feature,conn,cur):
 			%s
 		);"""
 	values = (
+		feature["properties"]["event_id"],
 		feature["geometry"]["coordinates"][0],
 		feature["geometry"]["coordinates"][1],
 		feature["properties"]["name"],
@@ -62,8 +65,13 @@ def save_feature(feature,conn,cur):
 		feature["properties"]["availability"],
 		feature["properties"]["donation"],
 	)
-	cur.execute(sql, values)
-	conn.commit()
+	try:
+		cur.execute(sql, values)
+		conn.commit()
+	except psycopg2.IntegrityError:
+		conn.rollback()
+		pass
+
 
 def get_london_events(page,token):
 		now = datetime.now()
@@ -71,7 +79,7 @@ def get_london_events(page,token):
 
 		format_s = "%Y-%m-%dT%H:%M:%S"
 		start_time=datetime.strftime(now,format_s)
-		end_time=datetime.strftime(b,format_s)
+		end_time=datetime.strftime(then,format_s)
 
 		data = {
 			"expand":"ticket_classes,venue",
@@ -100,7 +108,10 @@ def get_all_pages(token,conn,cur):
 	while(not last):
 		r = get_london_events(page,token)  #get this page of events
 		print str(page) + " of " + str(r['pagination']['page_count'])
-		save_features(events.process_events_json(r['events']),conn,cur)
+		save_features(
+			events.process_events_json(r),
+			conn,
+			cur)
 
 		last = r['pagination']['page_count'] == page
 		page = page + 1
