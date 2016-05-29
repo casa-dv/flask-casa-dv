@@ -21,6 +21,8 @@ def save_feature(feature,conn,cur):
 			description,
 			url,
 			category,
+			start,
+			"end",
 			start_time,
 			end_time,
 			postcode,
@@ -45,6 +47,8 @@ def save_feature(feature,conn,cur):
 			%s,
 			%s,
 			%s,
+			%s,
+			%s,
 			%s
 		);"""
 	values = (
@@ -55,6 +59,8 @@ def save_feature(feature,conn,cur):
 		feature["properties"]["description"],
 		feature["properties"]["url"],
 		feature["properties"]["category"],
+		feature["properties"]["start"],
+		feature["properties"]["end"],
 		feature["properties"]["start"],
 		feature["properties"]["end"],
 		feature["properties"]["postcode"],
