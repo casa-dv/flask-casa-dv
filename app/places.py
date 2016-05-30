@@ -55,6 +55,9 @@ def get_place_details(id,key):
 		if prop in place:
 			feature["properties"][prop] = place[prop]
 
+	if "rating" not in feature["properties"]:
+		feature["properties"]["rating"] = random.randint(1,4)
+
 	return feature
 
 def get_distance(orig_lat,orig_lon,dest_lat,dest_lon,key):

@@ -80,12 +80,17 @@ def forecast():
 		out = rc.get(key)
 		code = 200
 		if not out:
-			r = requests.get(base_url+request.args['lat']+","+request.args['lon'], params=params)
-			out = r.text
-			code = r.status_code
+			try:
+				r = requests.get(base_url+request.args['lat']+","+request.args['lon'], params=params)
+				out = r.text
+				code = r.status_code
+				if code == requests.codes.ok:
+					rc.setex(key,60*60,out)
 
-			if code == requests.codes.ok:
-				rc.setex(key,60*60,out)
+			except requests.exceptions.ConnectionError:
+				out = '{"error":"could not connect to forecast api"}'
+				code = 500
+
 
 		resp = make_response(out, code)
 		resp.headers['Content-Type'] = "application/json"

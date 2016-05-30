@@ -27,6 +27,7 @@ def save_feature(feature,conn,cur):
 			description,
 			url,
 			category,
+			format,
 			start,
 			"end",
 			start_time,
@@ -55,6 +56,7 @@ def save_feature(feature,conn,cur):
 			%s,
 			%s,
 			%s,
+			%s,
 			%s
 		);"""
 	values = (
@@ -65,6 +67,7 @@ def save_feature(feature,conn,cur):
 		feature["properties"]["description"],
 		feature["properties"]["url"],
 		feature["properties"]["category"],
+		feature["properties"]["format"],
 		feature["properties"]["start"],
 		feature["properties"]["end"],
 		feature["properties"]["start"],
@@ -94,7 +97,7 @@ def get_london_events(page,token):
 		end_time=datetime.strftime(then,format_s)
 
 		data = {
-			"expand":"ticket_classes,venue",
+			"expand":"format,ticket_classes,venue",
 			"venue.city": "london",
 			"start_date.range_start": start_time,
 			"start_date.range_end": end_time,
@@ -145,8 +148,11 @@ if __name__ == "__main__":
 	# 		"description":  "UCL's annual Teaching and Learning Conference will be held on April 19 at the UCL Institute of Education on Bedford Way.  \nThe annual conference brings together staff and students – anyone, in fact, who has a stake in any aspect of learning and teaching – to share interesting ideas and experiences, forge new partnerships and collectively reflect on how to make teaching and learning truly exceptional. This year's theme is ChangeMaking to acknowledge the transformative power of education, and to mark the work of the students in the enhancement initiative UCL ChangeMakers. \nThis year's keynote session will include the presentation of the Provost's Teaching Awards (PTA) and the UCLU's Student Choice Teaching Awards (SCTA).  \nAll staff and students of UCL, as well as guests of the award winners, are welcome to attend. If you are at UCL and wish to submit a proposal please go to the Moodle site (UCL login required). \nLunch will be provided for participants who have registered for the conference daytime sessions. If you have any dietary or disability requirements, or any further questions, please contact tlconference@ucl.ac.uk.  \nPlease book a ticket for the whole event (keynote and awards, sessions and drinks reception) or each separate part of the event you wish to attend. We look forward to seeing you there. \nPlease note: Whole day tickets are now sold out. If you still wish to attend the whole day, please select each of the separate tickets (i.e. keynote, daytime sessions and drinks reception) which are still available. ",
 	# 		"url":          "http://initd.org/psycopg/docs/usage.html#passing-parameters-to-sql-queries",
 	# 		"category":     "Food & Drink",
+	# 		"format":       "Food & Drink",
 	# 		"start":        "2016-04-19T17:30:00",
 	# 		"end":          "2016-04-19T17:30:00",
+	# 		"start_time":   "2016-04-19T17:30:00",
+	# 		"end_time":     "2016-04-19T17:30:00",
 	# 		"postcode":     "N2 0NL",
 	# 		"address":      "94, Great North Road",
 	# 		"free":         True,

@@ -33,6 +33,11 @@ def process_events_json(data):
 				min_price = None
 				max_price = None
 
+			if "format" in e and e['format'] is not None:
+				format_name = e['format']['name']
+			else:
+				format_name = "Melting Pot & Co"
+
 			event = {
 				"properties": {
 					"name":         e['name']['html'],
@@ -40,6 +45,7 @@ def process_events_json(data):
 					"description":  e['description']['text'],
 					"url":          e['url'],
 					"category":     recode_eventbrite_category(e['category_id']),
+					"format":       format_name,
 					"start":        e['start']['local'],
 					"end":          e['end']['local'],
 					"postcode":     e['venue']['address']['postal_code'],
@@ -91,4 +97,4 @@ def recode_eventbrite_category(id):
 	if id in cats:
 		return cats[id]
 	else:
-		return "Other"
+		return "Melting Pot & Co"
