@@ -33,11 +33,32 @@
     font-weight: 200;
     font-style: normal;
 }
+@font-face {
+    font-family: 'merriweather';
+    src: url('merriweather-bold-webfont.woff2') format('woff2'),
+         url('merriweather-bold-webfont.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'merriweather';
+    src: url('merriweather-italic-webfont.woff2') format('woff2'),
+         url('merriweather-italic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'merriweather';
+    src: url('merriweather-regular-webfont.woff2') format('woff2'),
+         url('merriweather-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
 * {
     box-sizing: border-box;
 }
 html, body {
-    font-family: sans-serif;
+    font-family: 'merriweather', serif;
 }
 h1,h2,h3,h4 {
     font-family: 'bebas_neue', sans-serif;
@@ -81,12 +102,17 @@ white  #fff
 }
 .marker-busstop img {
     position: absolute;
-    top: -30px;
-    left: -6px;
+    top: -40px;
+    left: -18px;
 }
 .marker-busstop p {
+    font-family: 'bebas_neue';
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+    margin: 0;
     position: absolute;
-    top: 0px;
+    top: 6px;
     text-align: center;
     width: 160px;
     left: -74px;

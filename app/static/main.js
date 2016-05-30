@@ -146,17 +146,13 @@ APP = (function () {
 				format: {
 					to: function(value){
 						return '';	// display no labels
-						if(+moment(value).format('k') === 24){
-							return moment(value).format('dddd');
-						} else {
-							return moment(value).format('ha');
-						}
+						// if(+moment(value).format('k') === 24){
+						// 	return moment(value).format('dddd');
+						// } else {
+						// 	return moment(value).format('ha');
+						// }
 					}
-				},
-				tooltips: true
-				// tooltips: [function(value){
-				// 	return moment(value).format('ha');
-				// }]
+				}
 			}
 		});
 		slider.noUiSlider.on('update', function( values, handle ) {
@@ -215,38 +211,39 @@ APP = (function () {
 		var events = JSON.parse(this.responseText);
 
 		L.geoJson(events,{
-			style: function(feature) {
-				var color;
+			pointToLayer: function(feature, latlng) {
+				var icon;
 				switch (feature.properties.category) {
 					case 'Business & Education':
-						color = "#ffcccc";
+						icon = "education.png";
 						break;
 					case 'Culture & Art':
-						color = "#ccffcc";
+						icon = "culture.png";
 						break;
 					case 'Fashion & Health':
-						color = "#ccffff";
+						icon = "beauty.png";
 						break;
 					case 'Food & Drink':
-						color = "#ccd9ff";
+						icon = "restaurant.png";
 						break;
 					case 'Melting Pot & Co':
-						color = "#ffccf2";
+						icon = "melting-pot.png";
 						break;
 					case 'Sport & Travel':
-						color = "#ffff00";
+						icon = "sport.png";
 						break;
 					default:
-						color = "#ffccf2";
+						icon = "melting-pot.png";
 						break;
 				}
-				return {
-					fillOpacity: 1,
-					color: color
-				};
-			},
-			pointToLayer: function(feature, latlng) {
-					return new L.CircleMarker(latlng, {radius: 8, fillOpacity: 0.85});
+				var myIcon = L.icon({
+					iconUrl: "/static/icons/"+icon,
+					// iconRetinaUrl: 'my-icon@2x.png',
+					iconSize: [48, 48],
+					iconAnchor: [24, 34]
+				});
+
+				return L.marker(latlng, {icon: myIcon});
 			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){

@@ -3,15 +3,18 @@
 	function load_map(id,options){
 		var map = L.map(id,
 			{
+				zoomControl: false,
+				attributionControl:false
 			}
 		);
 		map.setView([options.lat, options.lng], options.zoom);
 
 		var mapbox_style_light = "annabannanna/ciod0h6u500dcb1nhx8jebkx4";
 		var mapbox_style_contrast = "annabannanna/ciotz5593002ldqnf8a87z6jg";
+		var mapbox_style_grey = "annabannanna/ciou5y9870037dqnffo7njp0b";
 
 		var mapbox_key = "pk.eyJ1IjoiYW5uYWJhbm5hbm5hIiwiYSI6ImNpbWdscW40bDAwMDgzNG0yZ2FxYTNhZ2YifQ.VmWzlEEOgWa4ydTmqfS06g";
-		var mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style_light+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
+		var mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style_grey+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
 
 		var layer = L.tileLayer(mapbox_url, {
 			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -58,7 +61,10 @@
 	limit_map_height();
 	var map = load_map("map",options);
 	d3.json('/static/data/all-stops.geojson.json', function(response){
-		var cluster = L.markerClusterGroup({ chunkedLoading: true });
+		var cluster = L.markerClusterGroup({
+			chunkedLoading: true,
+			showCoverageOnHover: false
+		});
 		L.geoJson(response,{
 			onEachFeature: function(feature, layer){
 				layer.on("click",function(){
@@ -70,10 +76,14 @@
 				var myIcon = L.divIcon({
 					className: 'marker-busstop',
 					html: [
-						'<img tabindex="0" src="http://localhost:5000/static/images/marker-icon.png">',
+						"<a href=\"/stops/",
+						featureData.properties.id,
+						"\">",
+						'<img tabindex="0" src="/static/icons/bus.png">',
 						"<p>",
 						featureData.properties.name,
-						"</p>"
+						"</p>",
+						"</a>"
 					].join("")
 				});
 				// you can set .my-div-icon styles in CSS
