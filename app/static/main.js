@@ -15,6 +15,7 @@ APP = (function () {
 
 	var now = moment().valueOf();
 	var then = moment().add(7,'days').valueOf();
+	var radius = 300;
 
 	var location = {
 		lat:51.501603,
@@ -26,9 +27,9 @@ APP = (function () {
 		location.lng = stop_details.lng;
 	}
 
-	var map_buses;
-	var map_places;
-	var map_events;
+	var map_buses = APP.map_buses;
+	var map_places = APP.map_buses;
+	var map_events = APP.map_buses;
 
 	function load_map(id,location){
 		var map = L.map(id,
@@ -166,20 +167,13 @@ APP = (function () {
 		return +(values[0]);
 	}
 
-	function get_json(url,cb){
-		var r = new XMLHttpRequest();
-		r.addEventListener("load", cb);
-		r.open("GET", url);
-		r.send();
+	function load_weather(weather) {
 	}
 
-	function load_weather() {
-		window.weather = JSON.parse(this.responseText);
-		console.log(weather);
-	}
-
-	function load_plaques() {
-		var plaques = JSON.parse(this.responseText);
+	function load_plaques(plaques) {
+		if(!plaques.features){
+			return;
+		}
 		L.geoJson(plaques,{
 			pointToLayer: function(feature, latlng) {
 				var myIcon = L.icon({
@@ -200,8 +194,7 @@ APP = (function () {
 		}).addTo(map_places);
 	}
 
-	function load_wiki() {
-		var wiki = JSON.parse(this.responseText);
+	function load_wiki(wiki) {
 		L.geoJson(wiki,{
 			pointToLayer: function(feature, latlng) {
 				var myIcon = L.icon({
@@ -218,16 +211,25 @@ APP = (function () {
 				});
 			}
 		}).addTo(map_places);
+
+		route_to(
+			location,
+			{
+				lng: wiki.features[0].geometry.coordinates[0],
+				lat: wiki.features[0].geometry.coordinates[1]
+			},
+			map_places
+		);
 	}
 
-	function load_places() {
-		var places = JSON.parse(this.responseText);
-		console.log(places);
+	function load_places(places) {
+
 	}
 
-	function load_events() {
-		var events = JSON.parse(this.responseText);
-
+	function load_events(events) {
+		if(!events.features){
+			return;
+		}
 		L.geoJson(events,{
 			pointToLayer: function(feature, latlng) {
 				var icon;
@@ -273,17 +275,95 @@ APP = (function () {
 		}).addTo(map_events);
 	}
 
+	function load_tfl(tfl){
+		if (!tfl.places){
+			return;
+		}
+		var t;
+		var myIcon;
+		for (var i = tfl.places.length - 1; i >= 0; i--) {
+			t = tfl.places[i];
+			if(t.id == stop_details.id){
+				continue;
+			}
+			if (t.placeType == "StopPoint"){
+				if (t.stopType == "NaptanPublicBusCoachTram" || t.stopType == "NaptanOnstreetBusCoachStopPair"){
+					myIcon = L.icon({
+						iconUrl: "/static/icons/bus.png",
+						iconSize: [32, 32],
+						iconAnchor: [16, 16]
+					});
+					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(map_buses);
+					continue;
+				}
+			}
+			if (t.placeType == "BikePoint"){
+					myIcon = L.icon({
+						iconUrl: "/static/icons/bike.png",
+						iconSize: [32, 32],
+						iconAnchor: [16, 16]
+					});
+					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(map_buses);
+					continue;
+			}
+		}
+	}
+
+	function route_to(start,end,map){
+		var control = L.Routing.control({
+			waypoints: [
+				L.latLng(start),
+				L.latLng(end)
+			],
+			// plan: L.Routing.Plan([
+			// 	L.latLng(start),
+			// 	L.latLng(end)
+			// ],{
+			// 	createMarker: function(){return false;}
+			// }),
+			draggableWaypoints: false,
+			addWaypoints: false,
+			createMarker: function(i,w){
+				return blackDot(w.latLng);
+			},
+			autoRoute: false,
+			show: false,
+			fitSelectedRoutes: false,
+			lineOptions: {
+				styles: [{color: 'black', opacity: 1, weight: 9}],
+				missingRouteStyles: [{color: 'black', opacity: 1, weight: 9}]
+			}
+		}).addTo(map);
+		control.route();
+	}
+
+	function blackDot(ll){
+		return L.circleMarker(ll, {
+			fillColor:"#000",
+			fillOpacity:1,
+			stroke: false,
+			radius: 12,
+			clickable: false
+		});
+	}
+
 	function setup(){
 		map_buses = load_map('map_buses',location);
 		map_places = load_map('map_places',location);
 		map_events = load_map('map_events',location);
 
-		get_json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe",load_places);
-		get_json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=restaurant",load_places);
-		get_json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
-		get_json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
-		get_json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
-		get_json(base_url+"/forecast?lat="+location.lat+"&lon="+location.lng,load_weather);
+		var ll = L.latLng(location);
+		blackDot(ll).addTo(map_buses);
+		blackDot(ll).addTo(map_places);
+		blackDot(ll).addTo(map_events);
+
+		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe",load_places);
+		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=restaurant",load_places);
+		d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
+		d3.json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
+		d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
+		d3.json(base_url+"/forecast?lat="+location.lat+"&lon="+location.lng,load_weather);
+		d3.json(base_url + "/tfl/Place?lat="+location.lat+"&lon="+location.lng+"&radius="+radius,load_tfl);
 
 		var slider = document.getElementById('timeline');
 		create_timeline(slider);
@@ -296,6 +376,4 @@ APP = (function () {
 	setup();
 
 	return APP;
-
-
 }());
