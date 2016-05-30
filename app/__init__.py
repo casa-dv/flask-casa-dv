@@ -95,8 +95,6 @@ def forecast():
 		resp.headers['Content-Type'] = "application/json"
 		return resp
 
-
-
 @app.route("/tfl/<path:api_path>")
 def tfl(api_path):
 	base_url = "https://api.tfl.gov.uk/"

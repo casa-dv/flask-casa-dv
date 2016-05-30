@@ -13,6 +13,12 @@ def save_features(features, conn, cur):
 	for feature in features:
 		save_feature(feature,conn,cur)
 
+def delete_old_events(conn,cur):
+	sql = """DELETE FROM events
+		WHERE end_time < %s;"""
+	cur.execute(sql, (datetime.now(),))
+	conn.commit()
+
 def save_feature(feature,conn,cur):
 	sql = """INSERT INTO events (
 			event_id,
@@ -130,6 +136,7 @@ if __name__ == "__main__":
 	conn = psycopg2.connect("dbname=tom user=tom")
 	cur = conn.cursor()
 
+	delete_old_events(conn,cur)
 	get_all_pages(EVENTBRITE_TOKEN,conn,cur)
 
 	# eg = {
