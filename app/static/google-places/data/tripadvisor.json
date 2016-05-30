@@ -1,0 +1,24 @@
+var tripadvisor_data = [
+	{
+		"google_place_id": "ChIJQSYRkMsEdkgR1mIkXfGP5_0",
+		"images": [
+			"https://media-cdn.tripadvisor.com/media/oyster/550/07/07/d7/81/pool--v4010821.jpg",
+			"https://media-cdn.tripadvisor.com/media/oyster/550/07/07/d8/ad/suite--v4011092.jpg",
+			"https://media-cdn.tripadvisor.com/media/oyster/550/07/07/d9/2a/superior-queen-room--v4011116.jpg",
+			"https://media-cdn.tripadvisor.com/media/oyster/550/07/07/d9/9a/lobby--v4010894.jpg",
+			"https://media-cdn.tripadvisor.com/media/oyster/550/07/07/d9/a2/lobby--v4010726.jpg",
+			"https://media-cdn.tripadvisor.com/media/oyster/550/07/07/d9/e2/the-hotel--v4011050.jpg"
+		],
+		"price_level": 3,
+		"rating":3,
+		"credit_cards":
+		"take_away":
+		"children":
+		"groups":
+		"outdoor seating":
+		"wheelchair":
+	},
+	{
+		"google_place_id"
+	},
+];

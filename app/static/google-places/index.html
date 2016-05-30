@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel='stylesheet' id='font-css'  href='http://fonts.googleapis.com/css?family=Roboto:400,300,100' type='text/css' media='all' />
+    <link rel='stylesheet' id='font-css'  href='./css/style.css' type='text/css' media='all' />    
+    <script type='text/javascript' src='http://code.jquery.com/jquery-1.10.2.min.js?ver=1.10.2'></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgo0C-bUIQ1276K8gt-DaikKwoYd_Ay_M&libraries=places"></script>
+    <script type='text/javascript' src='http://arshaw.com/xdate/downloads/0.8/xdate.js'></script>
+    <script type='text/javascript' src='./js/mapStyle.js'></script>
+    <script type='text/javascript' src='./js/tripadvisor.js'></script>
+    <script src='http://d3js.org/d3.v3.min.js'></script>
+    <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+
+    <script type="text/javascript">
+    var map;
+    var prices=[];
+    var ratings=[];
+    var names=[];
+    var distances=[];
+    var photos=[];
+    for (var i=0; i<tripadvisor_cafe.length; i++){
+        var cafe = tripadvisor_cafe[i];
+    }
+    for (var i=0; i<24; i++){
+        prices.push(cafe[i].price_level);
+        ratings.push(cafe[i].rating);
+        names.push(cafe[i].name);
+    }
+    var d = [[{axis:"Distance",value:1},{axis:"Price",value:2},{axis:"Rating",value:5}]];
+
+    var mycfg = {w: 300,h: 300,maxValue: 5,ExtraWidthX: 300}
+
+    var RadarChart = {
+      draw: function(id, d, options){
+      var cfg = {
+         radius: 5,             //radius of the points vertexes of the triangle
+         w: 600,
+         h: 600,
+         factor: 1,
+         factorLegend: .85,
+         maxValue: 1,
+         radians: 2 * Math.PI,
+         opacityArea: 0.5,
+         ToRight: 5,
+         TranslateX: 80,
+         TranslateY: 30,
+         ExtraWidthX: 100,
+         ExtraWidthY: 100,
+         color: d3.scale.category10()
+        };
+        
+        if('undefined' !== typeof options){
+          for(var i in options){
+            if('undefined' !== typeof options[i]){
+              cfg[i] = options[i];
+            }
+          }
+        }
+        cfg.maxValue = Math.max(cfg.maxValue, d3.max(d, function(i){return d3.max(i.map(function(o){return o.value;}))}));
+        var allAxis = (d[0].map(function(i, j){return i.axis}));
+        var total = allAxis.length;
+        var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
+        var Format = d3.format('%');
+        d3.select(id).select("svg").remove();
+        
+        var g = d3.select(id)
+                .append("svg")
+                .attr("width", cfg.w+cfg.ExtraWidthX)
+                .attr("height", cfg.h+cfg.ExtraWidthY)
+                .append("g")
+                .attr("transform", "translate(" + cfg.TranslateX + "," + cfg.TranslateY + ")");
+                ;
+
+        var tooltip;
+
+        series = 0;
+
+        var axis = g.selectAll(".axis")
+                .data(allAxis)
+                .enter()
+                .append("g")
+                .attr("class", "axis");
+
+        axis.append("line")
+            .attr("x1", cfg.w/2)
+            .attr("y1", cfg.h/2)
+            .attr("x2", function(d, i){return cfg.w/2*(1-cfg.factor*Math.sin(i*cfg.radians/total));})
+            .attr("y2", function(d, i){return cfg.h/2*(1-cfg.factor*Math.cos(i*cfg.radians/total));})
+            .attr("class", "line")
+            .style("stroke", "grey")
+            .style("stroke-width", "1px");
+
+        axis.append("text")
+            .attr("class", "legend")
+            .text(function(d){return d})
+            .style("font-family", "sans-serif")
+            .style("font-size", "11px")
+            .attr("text-anchor", "middle")
+            .attr("dy", "1.5em")
+            .attr("transform", function(d, i){return "translate(0, -10)"})
+            .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total);})
+            .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total);});
+
+     
+        d.forEach(function(y, x){
+          dataValues = [];
+          g.selectAll(".nodes")
+            .data(y, function(j, i){
+              dataValues.push([
+                cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+                cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
+              ]);
+            });
+          dataValues.push(dataValues[0]);
+          g.selectAll(".area")
+                         .data([dataValues])
+                         .enter()
+                         .append("polygon")
+                         .attr("class", "radar-chart-serie"+series)
+                         .style("stroke-width", "2px")
+                         .style("stroke", cfg.color(series))
+                         .attr("points",function(d) {
+                             var str="";
+                             for(var pti=0;pti<d.length;pti++){
+                                 str=str+d[pti][0]+","+d[pti][1]+" ";
+                             }
+                             return str;
+                          })
+                         .style("fill", function(j, i){return cfg.color(series)})
+                         .style("fill-opacity", cfg.opacityArea)
+                         .on('mouseover', function (d){
+                                            z = "polygon."+d3.select(this).attr("class");
+                                            g.selectAll("polygon")
+                                             .transition(200)
+                                             .style("fill-opacity", 0.1); 
+                                            g.selectAll(z)
+                                             .transition(200)
+                                             .style("fill-opacity", .7);
+                                          })
+                         .on('mouseout', function(){
+                                            g.selectAll("polygon")
+                                             .transition(200)
+                                             .style("fill-opacity", cfg.opacityArea);
+                         });
+          series++;
+        });
+        series=0;
+
+
+        d.forEach(function(y, x){
+          g.selectAll(".nodes")
+            .data(y).enter()
+            .append("svg:circle")
+            .attr("class", "radar-chart-serie"+series)
+            .attr('r', cfg.radius)
+            .attr("alt", function(j){return Math.max(j.value, 0)})
+            .attr("cx", function(j, i){
+              dataValues.push([
+                cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+                cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
+            ]);
+            return cfg.w/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total));
+            })
+            .attr("cy", function(j, i){
+              return cfg.h/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total));
+            })
+            .attr("data-id", function(j){return j.axis})
+            .style("fill", cfg.color(series)).style("fill-opacity", .9)
+            .on('mouseover', function (d){
+                        newX =  parseFloat(d3.select(this).attr('cx')) - 10;
+                        newY =  parseFloat(d3.select(this).attr('cy')) - 5;
+                        
+                        tooltip
+                            .attr('x', newX)
+                            .attr('y', newY)
+                            .text(Format(d.value))
+                            .transition(200)
+                            .style('opacity', 1);
+                            
+                        z = "polygon."+d3.select(this).attr("class");
+                        g.selectAll("polygon")
+                            .transition(200)
+                            .style("fill-opacity", 0.1); 
+                        g.selectAll(z)
+                            .transition(200)
+                            .style("fill-opacity", .7);
+                      })
+            .on('mouseout', function(){
+                        tooltip
+                            .transition(200)
+                            .style('opacity', 0);
+                        g.selectAll("polygon")
+                            .transition(200)
+                            .style("fill-opacity", cfg.opacityArea);
+                      })
+            .append("svg:title")
+            .text(function(j){return Math.max(j.value, 0)});
+
+          series++;
+        });
+        //Tooltip
+        tooltip = g.append('text')
+                   .style('opacity', 0)
+                   .style('font-family', 'sans-serif')
+                   .style('font-size', '13px');
+      }
+    };
+
+    var num=0;
+    var ratings=[];
+    function initialize() {
+        var location = new google.maps.LatLng(51.511732, -0.123270);
+        var directionsDisplay = new google.maps.DirectionsRenderer();
+        var map = new google.maps.Map(document.getElementById("map-canvas"), {
+            center: location,
+            zoom: 17,
+            minZoom: 17,
+            maxZoom: 17,
+            styles: greyMap,
+            streetViewControl:false,
+            zoomControl:false,
+            mapTypeControl:false,
+            draggable:false
+            });
+        var marker = new google.maps.Marker({
+            map: map,
+            position: location,
+            icon: "./img/icon.png"
+        });
+        directionsDisplay.setMap(map);
+    }
+
+    function load_markers(type) {
+        RadarChart.draw("#chart", d, mycfg);
+        var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers:true,preserveViewport:true})
+        var location = new google.maps.LatLng(51.511732, -0.123270);
+        var map = new google.maps.Map(document.getElementById("map-canvas"), {
+            center: location,
+            zoom: 17,
+            minZoom: 17,
+            maxZoom: 17,
+            styles: greyMap,
+            streetViewControl:false,
+            zoomControl:false,
+            mapTypeControl:false,
+            draggable: false
+            });
+        directionsDisplay.setMap(map);
+        var image = {
+            url:"./img/icon_"+type+".png",
+            size: new google.maps.Size(0.8,1.02),
+            anchor: new google.maps.Point(0.4,1.02)
+        }
+        var marker = new google.maps.Marker({
+            map: map,
+            position: location,
+            icon: "./img/icon.png"
+        });
+        var request = {
+                location: location,
+                radius: '300',
+                types: [type],
+                openNow: false
+            };
+        var service = new google.maps.places.PlacesService(map);
+        var directionsService = new google.maps.DirectionsService;
+        var distanceService = new google.maps.DistanceMatrixService();
+        function createMarker(place){
+            var marker = new google.maps.Marker({
+                map: map,
+                position: place.geometry.location,
+                icon: "./img/icon_"+type+".png"
+            });
+            var request2 = {
+                placeId: place.place_id
+            };
+            var request3 = {
+                origin: location,
+                destination: place.geometry.location,
+                travelMode: google.maps.TravelMode.WALKING
+            }
+            var request4 = {
+                origins: [location],
+                destinations: [place.geometry.location],
+                travelMode: google.maps.TravelMode.WALKING
+            }
+
+            google.maps.event.addListener(marker,'click',function(){
+                var marker = new google.maps.Marker({map:map, position:place.geometry.location, icon: image})
+                document.getElementById("place_name").innerHTML = place.name;
+                document.getElementById("place_address").innerHTML = place.vicinity;
+
+                service.getDetails(request2,function(results){
+                    var number;
+                    if (results && results.formatted_phone_number){number = results.formatted_phone_number;} 
+                    else {number = "";}
+                    document.getElementById("place_number").innerHTML = number;
+                    var website;
+                    if (results && results.website){website = results.website;}
+                    else {website = "";}
+                    document.getElementById("place_website").innerHTML = "<a href='" + website + "'>" + "website" + "</a>";
+                    var price_level;
+                    if (results && results.price_level){price_level = results.price_level;}
+                    else {price_level = prices[names.indexOf(results.name)]}
+                    document.getElementById("place_price_level").innerHTML = price_level;
+                    var rating;
+                    if (results && results.rating){rating = results.rating;}
+                    else {rating = ratings[names.indexOf(results.name)];}
+                    ratings.push(rating);
+                    document.getElementById("place_rating").innerHTML = rating;
+                    var reviews;
+                    if (results && results.reviews){reviews=results.reviews[0].text;}
+                    else {reviews="";}
+                    document.getElementById("place_reviews").innerHTML = reviews;
+                    if(results.photos && results.photos.length){
+                    document.getElementById("place_photos").innerHTML = results.photos[0].html_attributions;
+                    }
+                    place_reviews.onclick = function() {if(num<results.reviews.length-1){num=num+1; document.getElementById("place_reviews").innerHTML = results.reviews[num].text}else{num=0;document.getElementById("place_reviews").innerHTML = results.reviews[num].text}};
+                    var d = [[{axis:"Distance",value:1},{axis:"Price",value:2},{axis:"Rating",value:5}],
+                            [{axis:"Distance",value:distances[distances.length-1]},{axis:"Price",value:price_level},{axis:"Rating",value:rating}]];
+                    RadarChart.draw("#chart", d, mycfg);
+                });
+
+               distanceService.getDistanceMatrix(request4,function(response,status){
+                    if (status == google.maps.DistanceMatrixStatus.OK){
+                        var origins = response.originAddresses;
+                        var destinations = response.destinationAddresses;
+                        for (var i = 0; i < origins.length; i++) {
+                            var results = response.rows[i].elements;
+                            for (var j = 0; j < results.length; j++) {
+                                var element = results[j];
+                                var duration = element.duration.text;
+                                var duration2 = duration.substr(0,1);
+                                distances.push(duration2);
+                            }
+                        }
+                    }
+                document.getElementById("place_distance").innerHTML = duration;
+                });
+                directionsService.route(request3, function(response,status){
+                    if (status == google.maps.DirectionsStatus.OK) {
+                        map.setCenter(location);
+                        directionsDisplay.setDirections(response);
+                    };
+                });
+            });
+        }
+
+        service.nearbySearch(request, function(results, status){
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                for (var i = 0; i < results.length; i++) {
+                    var place = results[i];
+                    createMarker(place);
+                };
+            };
+        });
+
+        document.getElementById("titleHeader").innerHTML =  type+"s at a walking distance";
+    }
+        
+    function cafes(){
+        load_markers("cafe")
+    }
+    function restaurants() {
+        load_markers("restaurant")
+    }
+
+
+    // Run the functions when the window has finished loading.
+    google.maps.event.addDomListener(window, 'load', initialize)
+    </script>
+
+</head>
+    
+<body>
+<div id="background"><img src = "./img/sfondo.png"></div>
+<div id="titleHeader">Places around this bus stop</div>
+<div id="map-canvas"></div>
+<div id="place_name"></div>
+<div id="place_number"></div>
+<div id="place_address"></div>
+<div id="place_website"></div> 
+<div id="place_distance"></div>
+<div id="place_price_level"></div>
+<div id="place_rating"></div>
+<div id="place_reviews_background"></div>
+<div id="place_reviews"></div>
+<div id="place_photos"></div>
+<div style="top:39%; left:7%; height: 2%; width: 30%; background: #ccc;">
+    <div style="top:39%; left:7%; height: 2%; width: rating[i]*20%; background: #000;"></div>
+</div>
+<div id="chart"></div>
+RadarChart.draw("#chart", d, mycfg);
+<div id="buttonsreviews">
+    <button class="buttonreviews squarebutton" type="button"></button>
+</div>
+<div id="buttons">
+    <button class="" type="button" onclick="cafes()"><img src = "./img/button_cafe.png" border-radius="50%"></button>
+    <button type="button" onclick="restaurants()"><img src = "./img/button_restaurant.png" border-radius="50%"></button>  
+</div>
+</body>
+</html>
