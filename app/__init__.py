@@ -142,6 +142,7 @@ def eventbrite_scraped():
 									description,
 									url,
 									category,
+									format,
 									start,
 									"end",
 									postcode,

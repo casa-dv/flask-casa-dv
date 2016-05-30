@@ -4,8 +4,14 @@
 APP = (function () {
 
 	var APP = {};
-	var base_url = "http://localhost:5000";
-	// var base_url = "http://casa-dv.made-by-tom.co.uk";
+	var base_url;
+
+	var location = document.location + "";
+	if(location.match("localhost")){
+		base_url = "http://localhost:5000";
+	} else {
+		base_url = "http://casa-dv.made-by-tom.co.uk";
+	}
 
 	var now = moment().valueOf();
 	var then = moment().add(7,'days').valueOf();
@@ -36,9 +42,16 @@ APP = (function () {
 		);
 		map.setView([location.lat, location.lng], location.zoom);
 
-		var mapbox_style = "annabannanna/ciod0h6u500dcb1nhx8jebkx4";
+		var mapbox_style_light = "annabannanna/ciod0h6u500dcb1nhx8jebkx4";
+		var mapbox_style_contrast = "annabannanna/ciotz5593002ldqnf8a87z6jg";
+
 		var mapbox_key = "pk.eyJ1IjoiYW5uYWJhbm5hbm5hIiwiYSI6ImNpbWdscW40bDAwMDgzNG0yZ2FxYTNhZ2YifQ.VmWzlEEOgWa4ydTmqfS06g";
-		var mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
+		var mapbox_url;
+		if(id === "map_places"){
+			mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style_light+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
+		} else {
+			mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style_contrast+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
+		}
 
 		var layer = L.tileLayer(mapbox_url, {
 			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -201,14 +214,34 @@ APP = (function () {
 
 		L.geoJson(events,{
 			style: function(feature) {
+				var color;
 				switch (feature.properties.category) {
-					case 'Business & Education': return {color: "#ffcccc"};
-					case 'Culture & Art':   return {color: "#ccffcc"};
-					case 'Fashion & Health': return {color: "#ccffff"};
-					case 'Food & Drink':   return {color: "#ccd9ff"};
-					case 'Melting Pot & Co': return {color: "#ffccf2"};
-					case 'Sport & Travel':   return {color: "#ffff00"};
+					case 'Business & Education':
+						color = "#ffcccc";
+						break;
+					case 'Culture & Art':
+						color = "#ccffcc";
+						break;
+					case 'Fashion & Health':
+						color = "#ccffff";
+						break;
+					case 'Food & Drink':
+						color = "#ccd9ff";
+						break;
+					case 'Melting Pot & Co':
+						color = "#ffccf2";
+						break;
+					case 'Sport & Travel':
+						color = "#ffff00";
+						break;
+					default:
+						color = "#ffccf2";
+						break;
 				}
+				return {
+					fillOpacity: 1,
+					color: color
+				};
 			},
 			pointToLayer: function(feature, latlng) {
 					return new L.CircleMarker(latlng, {radius: 8, fillOpacity: 0.85});

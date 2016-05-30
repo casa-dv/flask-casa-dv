@@ -1,8 +1,46 @@
+@font-face {
+    font-family: 'bebas_neue';
+    src: url('/static/fonts/bebasneue_bold-webfont.woff2') format('woff2'),
+         url('/static/fonts/bebasneue_bold-webfont.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'bebas_neue';
+    src: url('/static/fonts/bebasneue_book-webfont.woff2') format('woff2'),
+         url('/static/fonts/bebasneue_book-webfont.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'bebas_neue';
+    src: url('/static/fonts/bebasneue_regular-webfont.woff2') format('woff2'),
+         url('/static/fonts/bebasneue_regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'bebas_neue';
+    src: url('/static/fonts/bebasneue_light-webfont.woff2') format('woff2'),
+         url('/static/fonts/bebasneue_light-webfont.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'bebas_neue';
+    src: url('/static/fonts/bebasneue_thin-webfont.woff2') format('woff2'),
+         url('/static/fonts/bebasneue_thin-webfont.woff') format('woff');
+    font-weight: 200;
+    font-style: normal;
+}
 * {
     box-sizing: border-box;
 }
 html, body {
-    font: sans-serif;
+    font-family: sans-serif;
+}
+h1,h2,h3,h4 {
+    font-family: 'bebas_neue', sans-serif;
 }
 /*
 blue   #18ffff
@@ -16,15 +54,24 @@ white  #fff
     width: 33.3333%;
     padding: 0 20px; /* TODO media query to ensure max height of square map */
 }
+.map-inner-wrap{
+    max-width: 20em;
+    margin: 0 auto;
+}
 .map {
     background: rgba(0, 0, 0, 0);
     width: 100%;
     padding-top: 100%;
-    margin: 0 auto;
     background: #ccc;
 
     border-radius: 50%;
     transform: translateZ(0);
+
+    border: 11px solid #000;
+    box-sizing: content-box;
+}
+#map_buses .leaflet-tile-pane{
+    opacity: 0.2;
 }
 .error-msg {
     position: fixed;
