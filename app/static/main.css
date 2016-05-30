@@ -1,20 +1,30 @@
-body {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    margin: 0px;
-    border: 0px;
-    padding: 0px;
-    overflow-x: hidden;
-    overflow-y: hidden;
+* {
+    box-sizing: border-box;
 }
-#map {
+html, body {
+    font: sans-serif;
+}
+/*
+blue   #18ffff
+red    #f44336
+yellow #ffff00
+black  #000
+white  #fff
+ */
+.map-wrap{
+    float: left;
+    width: 33.3333%;
+    padding: 0 20px; /* TODO media query to ensure max height of square map */
+}
+.map {
     background: rgba(0, 0, 0, 0);
-    position: absolute;
-    top:0;
-    left:0;
-    right: 0;
-    bottom: 0;
+    width: 100%;
+    padding-top: 100%;
+    margin: 0 auto;
+    background: #ccc;
+
+    border-radius: 50%;
+    transform: translateZ(0);
 }
 .error-msg {
     position: fixed;
@@ -38,4 +48,31 @@ body {
     .mapzen-demo-iframed .leaflet-top {
       top: 50px;
     }
+}
+/* timeline overrides */
+.timeline-wrap {
+    width:100%;
+    z-index: 500;
+    /*bottom: 30px;*/
+    left: 0px;
+    right: 0px;
+    background: #fff;
+    padding: 30px 35px 50px;
+    overflow: hidden;
+}
+#timeline .noUi-handle {
+    top: -35px;
+    width: 0px;
+    height: 0px;
+    border-color: black white white white;
+    border-width: 30px 20px 0px 20px;
+    box-shadow: none;
+    overflow: hidden;
+}
+#timeline.noUi-target {
+    box-shadow: none;
+    border-radius: 0;
+    border: 0;
+    background: #000;
+    height: 5px;
 }

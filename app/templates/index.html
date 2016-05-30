@@ -3,14 +3,39 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Casa Future Bus Stops</title>
+	<link rel="stylesheet" href="static/leaflet.css" />
+	<link rel="stylesheet" href="static/nouislider.css">
+	<link rel="stylesheet" href="static/nouislider.pips.css">
+	<link rel="stylesheet" href="static/nouislider.tooltips.css">
 	<link rel="stylesheet" href="static/main.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0-beta.2/leaflet.css" />
 </head>
 <body>
-	<div id="map"></div>
+    <div class="maps">
+        <div class="map-wrap">
+        	<div id="map_buses" class="map"></div>
+        </div>
+        <div class="map-wrap">
+        	<div id="map_places" class= "map"></div>
+        </div>
+        <div class="map-wrap">
+        	<div id="map_events" class= "map"></div>
+        </div>
+    </div>
+	<div class="timeline-wrap">
+		<div id="timeline"></div>
+	</div>
+    <div class="details_wrap">
+        <div id="details_buses" class="details"></div>
+        <div id="details_places" class="details">
+            <p id="place_name"></p>
+        </div>
+        <div id="details_events" class="details"></div>
+    </div>
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0-beta.2/leaflet.js"></script>
-	<script src="https://mapzen.com/tangram/0.6/tangram.min.js"></script>
+	<script src="static/leaflet.js"></script>
+	<script src="static/moment.min.js"></script>
+	<script src="static/tangram.min.js"></script>
+	<script src="static/nouislider.min.js"></script>
 	<script src="static/main.js"></script>
 </body>
 </html>

@@ -1,88 +1,249 @@
-var map = L.map('map');
-var lon = -0.125984;
-var lat = 51.501603;
-map.setView([lat, lon], 15);
+/*jslint browser: true*/
+/*global Tangram, L */
 
-var layer = Tangram.leafletLayer({
-		scene: "static/daynight.yaml",
-		preUpdate: preUpdate,
-		postUpdate: postUpdate,
-		attribution: '<a href="https://mapzen.com/tangram">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/">Mapzen</a>'
-});
+APP = (function () {
 
-var scene = layer.scene;
+	var APP = {};
+	var base_url = "http://localhost:5000";
+	// var base_url = "http://casa-dv.made-by-tom.co.uk";
 
-layer.on('init', function() {
-	// everything's good, carry on
-	window.addEventListener('resize', resizeMap);
-	resizeMap();
-});
+	var now = moment().valueOf();
+	var then = moment().add(7,'days').valueOf();
 
-// Resize map to window
-function resizeMap() {
-	document.getElementById('map').style.width = window.innerWidth + 'px';
-	document.getElementById('map').style.height = window.innerHeight + 'px';
-	map.invalidateSize(false);
-}
+	var location = {
+		lat:51.501603,
+		lng:-0.125984,
+		zoom: 16
+	};
 
-layer.on('error', function(error) {
-	// something went wrong
-	var noticeTxt, errorEL = document.createElement('div');
-	errorEL.setAttribute("class", "error-msg");
-		 // WebGL not supported (or at least didn't initialize properly!)
-	if (layer.scene && !layer.scene.gl) {
-		noticeTxt = document.createTextNode("Your browser doesn't support WebGL. Please try with recent Firefox or Chrome, Tangram is totally worth it.");
-		errorEL.appendChild(noticeTxt);
-	 }
-	 // Something else went wrong, generic error message
-	 else {
-		noticeTxt = document.createTextNode("We are sorry, but something went wrong, please try later.");
-		errorEL.appendChild(noticeTxt);
-	 }
-	 document.body.appendChild(errorEL);
-});
+	var map_buses;
+	var map_places;
+	var map_events;
 
-layer.addTo(map);
+	function load_map(id,location){
+		var map = L.map(id,
+			{
+				zoomControl: false,
+				attributionControl:false,
+				dragging: false,
+				touchZoom: false,
+				scrollWheelZoom: false,
+				doubleClickZoom: false,
+				boxZoom: false,
+				tap: false,
+				keyboard: false
+			}
+		);
+		map.setView([location.lat, location.lng], location.zoom);
 
+		var mapbox_style = "annabannanna/ciod0h6u500dcb1nhx8jebkx4";
+		var mapbox_key = "pk.eyJ1IjoiYW5uYWJhbm5hbm5hIiwiYSI6ImNpbWdscW40bDAwMDgzNG0yZ2FxYTNhZ2YifQ.VmWzlEEOgWa4ydTmqfS06g";
+		var mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
 
-function preUpdate(will_render) {
+		var layer = L.tileLayer(mapbox_url, {
+			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+		}).addTo(map);
+
+		// var layer = Tangram.leafletLayer({
+		// 	scene: 'static/scene.yaml',
+		// 	preUpdate: pre_update,
+		// 	// attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a>'
+		// 	attribution: ''
+		// });
+		window.addEventListener('load', function () {
+			layer.addTo(map);
+		});
+		return map;
+	}
+
+	function pre_update(will_render) {
 		if (!will_render) {
-				return;
+			return;
 		}
-		daycycle();
-}
+		daycycle(this);
+	}
 
-function postUpdate() {
-}
+	function daycycle(scene) {
+		var t = window.sliderTime; // unix ms
+		var h = window.sliderHour;
+		var hx = window.sliderHourIndex;
+		var dx = window.sliderDayIndex;
 
-function daycycle() {
-		d = new Date();
-		t = d.getTime()/10000;
+		var w = (3.14159 * (h / 12)) + 3.14159;
 
-		x = Math.sin(t);
-		y = Math.sin(t+(3.14159/2)); // 1/4 offset
-		z = Math.sin(t+(3.14159)); // 1/2 offset
-
-		scene.view.camera.axis = {x: x, y: y};
+		var x = Math.sin(w);
+		var y = Math.sin(w+(3.14159/2)); // 1/4 offset
 
 		// offset blue and red for sunset and moonlight effect
-		B = x + Math.abs(Math.sin(t+(3.14159*0.5)))/4;
-		R = y + Math.abs(Math.sin(t*2))/4;
+		var B = x + Math.abs(Math.sin(t+(3.14159*0.5)))/4;
+		var R = y + Math.abs(Math.sin(t*2))/4;
 
-		scene.lights.sun.diffuse = [R, y, B, 1];
+		scene.lights.sun.diffuse = [R, y, B, 1]; // TODO look in weather for colours and sunsetTime/sunriseTime
 		scene.lights.sun.direction = [x, 1, -0.5];
 
-		px = Math.min(x, 0); // positive x
-		py = Math.min(y, 0); // positive y
+		var px = Math.min(x, 0); // positive x
+		var py = Math.min(y, 0); // positive y
+
 		// light up the roads at night
-		scene.styles.roads.material.emission.amount = [-py, -py, -py, 1];
+		scene.styles["roads"].material.emission.amount = [-0.5-py, -0.5-py, -0.5-py, 1];
+
 		// turn water black at night
-		scene.styles.water.material.ambient.amount = [py+1, py+1, py+1, 1];
-		scene.styles.water.material.diffuse.amount = [py+1, py+1, py+1, 1];
+		scene.styles["water"].material.ambient.amount = [py+1, py+1, py+1, 1];
+		scene.styles["water"].material.diffuse.amount = [py+1, py+1, py+1, 1];
 
 		// turn up buildings' ambient response at night
-		ba = -py*0.75+0.75;
-		scene.styles.buildings.material.ambient.amount = [ba, ba, ba, 1];
+		var ba = -py*.75+.75;
+		scene.styles["buildings"].material.ambient.amount = [ba, ba, ba, 1];
 
 		scene.animated = true;
-}
+	}
+
+	function update_time_globals(){
+		var t = window.sliderTime;
+		window.sliderHour = (+(moment(t).format('k')) - 1);
+		window.sliderHourIndex = Math.floor((t - window.sliderSliderStart)/(1000*60*60));
+		window.sliderDayIndex = Math.floor(window.sliderHourIndex / 24);
+	}
+
+	function create_timeline(slider){
+		noUiSlider.create(slider, {
+			start: now,
+			step: 1000*60*60, // ms
+			range: {
+				'min': now,
+				'max': then
+			},
+			pips: { // Show a scale with the slider
+				mode: 'steps',
+				density: 3,
+				filter: function(value,type){
+					var hour = +moment(value).format('k');
+					if(hour === 24){
+						return 1;
+					}
+					if (hour % 6 === 0){
+						return 2;
+					}
+					return 0;
+				},
+				format: {
+					to: function(value){
+						return '';	// display no labels
+						if(+moment(value).format('k') === 24){
+							return moment(value).format('dddd');
+						} else {
+							return moment(value).format('ha');
+						}
+					}
+				},
+				tooltips: true
+				// tooltips: [function(value){
+				// 	return moment(value).format('ha');
+				// }]
+			}
+		});
+		slider.noUiSlider.on('update', function( values, handle ) {
+			window.sliderTime = parse_slider_value(values);
+			update_time_globals();
+		});
+		return slider;
+	}
+
+	function parse_slider_value(values){
+		return +(values[0]);
+	}
+
+	function get_json(url,cb){
+		var r = new XMLHttpRequest();
+		r.addEventListener("load", cb);
+		r.open("GET", url);
+		r.send();
+	}
+
+
+
+	function load_weather() {
+		window.weather = JSON.parse(this.responseText);
+		console.log(weather);
+	}
+
+	function load_plaques() {
+		var plaques = JSON.parse(this.responseText);
+		L.geoJson(plaques,{
+			onEachFeature: function (feature, layer) {
+				layer.on("click",function(){
+					var props = feature.properties;
+					document.querySelector(".place_inscription").textContent = props.inscription;
+					// TODO active/selected state per marker
+				});
+			}
+		}).addTo(map_places);
+	}
+
+	function load_wiki() {
+		var wiki = JSON.parse(this.responseText);
+		L.geoJson(wiki,{
+			onEachFeature: function (feature, layer) {
+				layer.on("click",function(){
+					console.log(feature.properties);
+				});
+			}
+		}).addTo(map_places);
+	}
+
+	function load_places() {
+		var places = JSON.parse(this.responseText);
+		console.log(places);
+	}
+
+	function load_events() {
+		var events = JSON.parse(this.responseText);
+
+		L.geoJson(events,{
+			style: function(feature) {
+				switch (feature.properties.category) {
+					case 'Business & Education': return {color: "#ffcccc"};
+					case 'Culture & Art':   return {color: "#ccffcc"};
+					case 'Fashion & Health': return {color: "#ccffff"};
+					case 'Food & Drink':   return {color: "#ccd9ff"};
+					case 'Melting Pot & Co': return {color: "#ffccf2"};
+					case 'Sport & Travel':   return {color: "#ffff00"};
+				}
+			},
+			pointToLayer: function(feature, latlng) {
+					return new L.CircleMarker(latlng, {radius: 8, fillOpacity: 0.85});
+			},
+			onEachFeature: function (feature, layer) {
+				layer.on("click",function(){
+					console.log(feature.properties);
+				});
+			}
+		}).addTo(map_events);
+	}
+
+	function setup(){
+		map_buses = load_map('map_buses',location);
+		map_places = load_map('map_places',location);
+		map_events = load_map('map_events',location);
+
+		get_json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe",load_places);
+		get_json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=restaurant",load_places);
+		get_json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
+		get_json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
+		get_json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
+		get_json(base_url+"/forecast?lat="+location.lat+"&lon="+location.lng,load_weather);
+
+		var slider = document.getElementById('timeline');
+		create_timeline(slider);
+
+		window.sliderSliderStart = now;
+		window.sliderTime = now;
+		update_time_globals();
+	}
+
+	setup();
+
+	return APP;
+
+
+}());
