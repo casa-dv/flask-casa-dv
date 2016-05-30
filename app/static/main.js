@@ -181,6 +181,15 @@ APP = (function () {
 	function load_plaques() {
 		var plaques = JSON.parse(this.responseText);
 		L.geoJson(plaques,{
+			pointToLayer: function(feature, latlng) {
+				var myIcon = L.icon({
+					iconUrl: "/static/icons/plaques.png",
+					iconSize: [32, 32],
+					iconAnchor: [16, 16]
+				});
+
+				return L.marker(latlng, {icon: myIcon});
+			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
 					var props = feature.properties;
@@ -194,6 +203,15 @@ APP = (function () {
 	function load_wiki() {
 		var wiki = JSON.parse(this.responseText);
 		L.geoJson(wiki,{
+			pointToLayer: function(feature, latlng) {
+				var myIcon = L.icon({
+					iconUrl: "/static/icons/wikipedia.png",
+					iconSize: [32, 32],
+					iconAnchor: [16, 16]
+				});
+
+				return L.marker(latlng, {icon: myIcon});
+			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
 					console.log(feature.properties);
@@ -239,8 +257,10 @@ APP = (function () {
 				var myIcon = L.icon({
 					iconUrl: "/static/icons/"+icon,
 					// iconRetinaUrl: 'my-icon@2x.png',
-					iconSize: [48, 48],
-					iconAnchor: [24, 34]
+					// iconSize: [48, 48],
+					// iconAnchor: [24, 24]
+					iconSize: [32, 32],
+					iconAnchor: [16, 16]
 				});
 
 				return L.marker(latlng, {icon: myIcon});
