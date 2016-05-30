@@ -68,10 +68,28 @@ white  #fff
     transform: translateZ(0);
 
     border: 11px solid #000;
+    margin-left: -11px;
     box-sizing: content-box;
+}
+.map-wrap.full-page {
+    float: none;
+    margin: 0 auto;
+    width: 100%;
 }
 #map_buses .leaflet-tile-pane{
     opacity: 0.2;
+}
+.marker-busstop img {
+    position: absolute;
+    top: -30px;
+    left: -6px;
+}
+.marker-busstop p {
+    position: absolute;
+    top: 0px;
+    text-align: center;
+    width: 160px;
+    left: -74px;
 }
 .error-msg {
     position: fixed;

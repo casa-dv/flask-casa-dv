@@ -32,9 +32,42 @@ app.config["REDIS_URL"] = "redis://localhost:6379/0"
 rc = FlaskRedis.from_custom_provider(StrictRedis, app)
 CORS(app)
 
+def json_response(data, code=200):
+	resp = make_response(data, code)
+	resp.headers['Content-Type'] = "application/json"
+	return resp
+
 @app.route("/")
 def hello():
 	return render_template("index.html")
+
+@app.route("/stops")
+def stops():
+	return render_template("stops.html")
+
+@app.route("/stops/<stop_id>")
+def stop(stop_id):
+	details_r = tfl_request({},"StopPoint/"+stop_id)
+	details = json.loads(details_r["text"])
+
+	if "httpStatusCode" in details and details["httpStatusCode"] == 404:
+		return make_response("Stop not found. Try <a href=\"/stops/490015764C\">Covent Garden / Catherine Street</a>", 400)
+
+	details = parse_stop(details,stop_id)
+	# return json_response(json.dumps(details))
+	return render_template("stop.html",data=details)
+
+def parse_stop(stop,stop_id):
+	if(stop["id"] == stop_id):
+		return stop
+
+	if("children" in stop and len(stop["children"])>0):
+		for child in stop["children"]:
+			found = parse_stop(child,stop_id)
+			if(found is not None):
+				return found
+	return None
+
 
 @app.route("/places")
 def place_route():
@@ -49,14 +82,9 @@ def place_route():
 			out = json.dumps(places.get_places(lat,lon,place_type,GOOGLE_API_KEY))
 			rc.setex(key,24*60*60,out)
 
-		resp = make_response(out, 200)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(out)
 	else:
-		resp = make_response(json.dumps({"error":"lat, lon and type are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
-
+		return json_response(json.dumps({"error":"lat, lon and type are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
 
 @app.route("/forecast")
 def forecast():
@@ -96,26 +124,31 @@ def forecast():
 		resp.headers['Content-Type'] = "application/json"
 		return resp
 	else:
-		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
 
 @app.route("/tfl/<path:api_path>")
 def tfl(api_path):
-	base_url = "https://api.tfl.gov.uk/"
 	args = dict(request.args)
-	args['app_key'] = TFL_APP_KEY
-	args['app_id']  = TFL_APP_ID
-	r = requests.get(base_url+api_path, params = args)
+	r = tfl_request(args,api_path)
 
-	if r.status_code == requests.codes.ok:
-		resp = make_response(r.text, 200)
-		resp.headers['Content-Type'] = r.headers.get('content-type')
-		return resp
+	return json_response(r["text"], r["status_code"])
+
+def tfl_request(args,api_path):
+
+	key = ":".join(["tfl",str(args),api_path])
+	r = rc.get(key)
+	if not r:
+		base_url = "https://api.tfl.gov.uk/"
+		args['app_key'] = TFL_APP_KEY
+		args['app_id']  = TFL_APP_ID
+		r = requests.get(base_url+api_path, params = args)
+		r = {"text":r.text,"status_code":r.status_code}
+		rc.setex(key,60*60,json.dumps(r))
 	else:
-		resp = make_response(r.text, r.status_code)
-		resp.headers['Content-Type'] = r.headers.get('content-type')
-		return resp
+		r = json.loads(r)
+	return r
+
+
 
 @app.route("/eventbrite")
 def eventbrite_scraped():
@@ -167,13 +200,9 @@ def eventbrite_scraped():
 		values = (lon,lat)
 		cur.execute(sql,values)
 		out = cur.fetchone()
-		resp = make_response(json.dumps(out[0]), 200)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(json.dumps(out[0]), 200)
 	else:
-		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
 
 @app.route("/dbpedia")
 def dbpedia():
@@ -213,13 +242,9 @@ def dbpedia():
 		values = (lon,lat)
 		cur.execute(sql,values)
 		out = cur.fetchone()
-		resp = make_response(json.dumps(out[0]), 200)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(json.dumps(out[0]), 200)
 	else:
-		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
 
 @app.route("/plaques")
 def plaques():
@@ -264,13 +289,9 @@ def plaques():
 		values = (lon,lat)
 		cur.execute(sql,values)
 		out = cur.fetchone()
-		resp = make_response(json.dumps(out[0]), 200)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(json.dumps(out[0]), 200)
 	else:
-		resp = make_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
-		resp.headers['Content-Type'] = "application/json"
-		return resp
+		return json_response(json.dumps({"error":"lat and lon are required parameters. Try ?lat=51.5218991&lon=-0.1381519"}), 400)
 
 app.debug = DEBUG
 if __name__ == "__main__":

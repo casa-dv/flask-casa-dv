@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>{{data.commonName}}</title>
+	<link rel="stylesheet" href="/static/leaflet.css" />
+	<link rel="stylesheet" href="/static/nouislider.css">
+	<link rel="stylesheet" href="/static/nouislider.pips.css">
+	<link rel="stylesheet" href="/static/main.css">
+</head>
+<body>
+	<h1>{{data.commonName}}</h1>
+    <div class="maps">
+        <div class="map-wrap">
+        <div class="map-inner-wrap">
+        	<div id="map_buses" class="map"></div>
+        </div>
+        </div>
+        <div class="map-wrap">
+        <div class="map-inner-wrap">
+        	<div id="map_places" class= "map"></div>
+        </div>
+        </div>
+        <div class="map-wrap">
+        <div class="map-inner-wrap">
+        	<div id="map_events" class= "map"></div>
+        </div>
+        </div>
+    </div>
+	<div class="timeline-wrap">
+		<div id="timeline"></div>
+	</div>
+    <div class="details_wrap">
+        <div id="details_buses" class="details"></div>
+        <div id="details_places" class="details">
+            <p class="place_title"></p>
+        </div>
+        <div id="details_events" class="details"></div>
+    </div>
+
+	<script src="/static/leaflet.js"></script>
+	<script src="/static/moment.min.js"></script>
+	<script src="/static/tangram.min.js"></script>
+	<script src="/static/nouislider.min.js"></script>
+	<script>
+	stop_details = {
+		lat: {{data.lat}},
+		lng: {{data.lon}}
+	}
+	</script>
+	<script src="/static/main.js"></script>
+</body>
+</html>

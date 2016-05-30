@@ -21,6 +21,10 @@ APP = (function () {
 		lng:-0.125984,
 		zoom: 16
 	};
+	if (window.stop_details){
+		location.lat = stop_details.lat;
+		location.lng = stop_details.lng;
+	}
 
 	var map_buses;
 	var map_places;
@@ -63,9 +67,9 @@ APP = (function () {
 		// 	// attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a>'
 		// 	attribution: ''
 		// });
-		window.addEventListener('load', function () {
-			layer.addTo(map);
-		});
+		// window.addEventListener('load', function () {
+		// 	layer.addTo(map);
+		// });
 		return map;
 	}
 
@@ -173,8 +177,6 @@ APP = (function () {
 		r.send();
 	}
 
-
-
 	function load_weather() {
 		window.weather = JSON.parse(this.responseText);
 		console.log(weather);
@@ -186,7 +188,7 @@ APP = (function () {
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
 					var props = feature.properties;
-					document.querySelector(".place_inscription").textContent = props.inscription;
+					document.querySelector(".place_title").textContent = props.inscription;
 					// TODO active/selected state per marker
 				});
 			}
