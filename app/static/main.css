@@ -1,7 +1,9 @@
 /*
 blue   #18ffff
 red    #f44336
-yellow #ffff00
+alt red #f54337
+##yellow #ffff00
+green #27bd42
 black  #000
 white  #fff
  */
@@ -54,11 +56,11 @@ html, body {
 h1,h2,h3,h4 {
     font-family: 'bebas_neue', sans-serif;
 }
-h1,h2,h3{
+h1,h2,h3,h4{
     text-align: center;
 }
 h1{
-    color: #ccc;
+    color: #ddd;
     font-size: 8em;
     margin: 0;
 }
@@ -66,8 +68,19 @@ h2{
     margin: 0.2em 0px 0px;
     font-size: 3em;
 }
-h3{
+h3,h4{
     font-size: 2em;
+}
+.details .subhead{
+    color: #f54337;
+    text-align: center;
+    margin: 0;
+}
+.details .title{
+    margin: 0.25em 0;
+}
+.details .description{
+
 }
 .stop-title{
     margin-bottom: -0.5em;
@@ -241,4 +254,7 @@ h3{
     border: 0;
     background: #000;
     height: 5px;
+}
+.maps .leaflet-routing-container {
+    display: none;
 }

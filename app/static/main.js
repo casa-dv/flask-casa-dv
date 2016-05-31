@@ -251,6 +251,7 @@ APP = (function () {
 			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
+					show_wiki_data(feature);
 					route_to(APP.location, {
 						lng: feature.geometry.coordinates[0],
 						lat: feature.geometry.coordinates[1]
@@ -264,6 +265,36 @@ APP = (function () {
 
 		show_layer("wiki","places");
 		route_layer("wiki","places",0);
+		show_wiki_data(wiki.features[0]);
+	}
+
+	function show_wiki_data(data){
+		if (!data.properties){
+			return;
+		}
+		var props = data.properties;
+		var title = decodeURIComponent(props.base).replace(/_/g," ");
+		var sub = "Wikipedia";
+		var text;
+		if (props.description.match(/^Coordinates/)){
+			text = "";
+		} else {
+			text = props.description;
+		}
+
+		var desc = [
+			"<p>",
+			text,
+			"</p><p>",
+			"<a href=\"",
+			props.url,
+			"\" target=\"_blank\">Read more on Wikipedia</a>",
+			"</p>"
+		].join("");
+
+		document.querySelector("#details_places .title").textContent = title;
+		document.querySelector("#details_places .subhead").textContent = sub;
+		document.querySelector("#details_places .description").innerHTML = desc;
 	}
 
 	function load_places_cafe(error,places) {
@@ -361,6 +392,7 @@ APP = (function () {
 			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
+					show_event_data(feature);
 					route_to(APP.location, {
 						lng: feature.geometry.coordinates[0],
 						lat: feature.geometry.coordinates[1]
@@ -383,16 +415,32 @@ APP = (function () {
 		}
 		var props = data.properties;
 		var title = props.name;
+		var sub = props.category;
+		var date;
+		var start = moment(props.start);
+		var end = moment(props.end);
+		if(start.format("ddd") == end.format("ddd")){
+			date = start.format("dddd HH:mm")+"&ndash;"+end.format("HH:mm");
+		} else {
+			date = start.format("dddd HH:mm")+"&ndash;"+end.format("dddd HH:mm");
+		}
+		if(props.address){
+			date += " at "+props.address;
+		}
 		var desc = [
-		"<p>",
-		props.description,
-		"</p>",
-		"<p>",
-		props.category,
-		"</p>"
+			"<p>",
+			date,
+			"</p><p>",
+			props.description,
+			"</p><p>",
+			"<a href=\"",
+			props.url,
+			"\" target=\"_blank\">Book now on Eventbrite</a>",
+			"</p>"
 		].join("");
 
-		document.querySelector("#details_events .title").textContent = title;
+		document.querySelector("#details_events .title").innerHTML = title;
+		document.querySelector("#details_events .subhead").textContent = sub;
 		document.querySelector("#details_events .description").innerHTML = desc;
 	}
 
@@ -454,11 +502,13 @@ APP = (function () {
 	}
 	function show_tfl_data(data){
 		var title;
+		var sub;
 		var desc ="";
 		var pos = {lat: data.lat, lng:data.lon};
 
 		if (data.placeType == "StopPoint"){
-			title = data.commonName
+			title = data.commonName;
+			sub = "Bus Stop";
 			if(data.indicator){
 				title += " " + data.indicator;
 			}
@@ -468,20 +518,26 @@ APP = (function () {
 					lines.push(data.lines[i].name);
 				}
 			}
-			desc = lines.join(", ");
+			desc = "<p>"+lines.join(", ") + [
+			"</p><p><a href=\"https://tfl.gov.uk/plan-a-journey/?from=",
+			encodeURIComponent(data.commonName),
+			"\" target=\"_blank\">Plan a journey from here with TfL</a></p>"
+			].join("");
 		} else {
 			title = data.commonName;
+			sub = "Bike Stand";
 			var bikes = _.findWhere(data.additionalProperties,{key:"NbBikes"});
 			var docks = _.findWhere(data.additionalProperties,{key:"NbEmptyDocks"});
 			if(bikes && docks){
-				desc = "Bikes available: "+bikes.value + " Docks available: "+docks.value;
+				desc += "Bikes available: "+bikes.value + " Docks available: "+docks.value+"</p>";
 			}
 			if(APP.activeLayers.buses == "tfl_bikes"){
 				route_to(APP.location, pos, "buses");
 			}
 		}
 		document.querySelector("#details_buses .title").textContent = title;
-		document.querySelector("#details_buses .description").textContent = desc;
+		document.querySelector("#details_buses .subhead").textContent = sub;
+		document.querySelector("#details_buses .description").innerHTML = desc;
 		route_to(APP.location, pos, "buses");
 	}
 
