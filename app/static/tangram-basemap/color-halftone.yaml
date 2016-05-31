@@ -1,0 +1,193 @@
+sources:
+    osm:
+        type: TopoJSON
+        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-HqUVidw
+        max_zoom: 16
+
+cameras:
+    perspective:
+        type: perspective
+        # focal_length: 1
+        focal_length: [[16, 2], [17, 2.5], [18, 3], [19, 4], [20, 6]] # pairs of [zoom, focal len]
+        vanishing_point: [-250, -250] # relative to center of screen, in pixels
+
+lights:
+    sun:
+        type: directional
+        direction: [0, 1, -.5]
+        diffuse: [1, 1, 1]
+        ambient: .5
+    moon:
+        type: directional
+        direction: [0, 1, -.5]
+        diffuse: [0, 0, .1]
+        ambient: .1
+
+styles:
+    roads:
+        base: lines
+        # mix: halftone
+        mix: colorhalftone
+        material:
+            diffuse: 1
+            emission: 1
+    water:
+        base: polygons
+        # mix: halftone
+        mix: colorhalftone
+        material:
+            diffuse: 1
+            ambient: 1
+    buildings:
+        base: polygons
+        # mix: halftone
+        mix: colorhalftone
+        material:
+            diffuse: 1
+            ambient: 1
+
+    cloud:
+        base: polygons
+        # mix: halftone
+        mix: colorhalftone
+        animated: true
+        shaders:
+            defines:
+                EFFECT_NOISE_ANIMATED: true
+            blocks:
+                global:
+                    url: shaders/glsl-noise-periodic-3d.glsl
+                color:
+                    url: shaders/noise.glsl
+
+    halftone:
+        url: styles/halftone.yaml
+
+    colorhalftone:
+        url: styles/halftone.yaml
+
+layers:
+    earth:
+        data:
+            source: osm
+            layer: earth
+        draw:
+            polygons:
+                # style: halftone
+                style: colorhalftone
+                order: function() { return feature.sort_key; }
+                color: [0.175, 0.175, 0.175]
+
+    landuse:
+        data:
+            source: osm
+            layer: landuse
+        draw:
+            polygons:
+                # style: halftone
+                style: colorhalftone
+                order: function() { return feature.sort_key; }
+                color: [0.5, 0.525, 0.5]
+        pitch:
+            filter:
+                kind: ['pitch', 'garden', 'playground']
+            draw:
+                polygons:
+                    # style: halftone
+                    style: colorhalftone
+                    color: [0.3, 0.375, 0.3]
+
+    water:
+        data:
+            source: osm
+            layer: water
+        draw:
+            polygons:
+                order: function() { return feature.sort_key; }
+                style: water
+                color: [0.5, 0.5, 0.825]
+        outline:
+            # don't draw outlines on ocean or riverbank features
+            filter: {not: {kind: [ocean, river, riverbank]}}
+            draw:
+                lines:
+                    # style: halftone
+                    style: colorhalftone
+                    color: [0.6, 0.6, 0.75]
+                    order: function() { return feature.sort_key; }
+                    width: function () {
+                            return (
+                                $zoom >= 16 && (2.5 * Math.log($zoom))
+                            );
+                        }
+
+    roads:
+        data:
+            source: osm
+            layer: roads
+        draw:
+            lines:
+                style: roads
+                order: function () { return feature.sort_key; }
+                outline:
+                    color: [0.2, 0.2, 0.2]
+                    width: 3
+        highway:
+            filter: { kind: highway }
+            draw:
+                lines:
+                    color: [1.0, 1.0, 1.0]
+                    width: 9
+            tunnel:
+                filter: { is_tunnel: yes }
+                draw:
+                    lines:
+                        color: '#333'
+                        width: 6
+                        outline:
+                            order: 352 # magic number
+                            color: white
+                            width: 1
+        major_road:
+            filter: { kind: major_road }
+            draw:
+                lines:
+                    color: [0.5, 0.5, 0.5]
+                    width: 5
+        minor_road:
+            filter: { kind: minor_road }
+            draw:
+                lines:
+                    color: [0.65, 0.65, 0.65]
+                    width: 4
+        path:
+            filter:
+               kind: path
+            draw:
+                lines:
+                    color: [0.8, 0.8, 0.8]
+                    width: 3
+        rail:
+            filter:
+                kind: rail
+                not: { is_tunnel: yes }
+            draw:
+                lines:
+                    color: [0.5, 0.0, 0.0]
+                    width: 3
+                    outline:
+                        order: 352 # magic number
+                        width: .5
+
+
+    buildings:
+        data:
+            source: osm
+            layer: buildings
+        draw:
+            polygons:
+                style: buildings
+                order: function() { return feature.sort_key; }
+                color: [.4, .4, .4]
+                # at z15, only extrude buildings over 20 m; at z16 and higher, extrude all buildings
+                extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }

@@ -1,0 +1,37 @@
+#map {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+.timeline-wrap {
+	position: absolute;
+	z-index: 500;
+	bottom: 30px;
+	left: 0px;
+	right: 0px;
+	background: #fff;
+	padding: 10px 35px 50px;
+	overflow: hidden;
+}
+
+/* timeline overrides */
+.noUi-value-horizontal.noUi-value-large {
+	-webkit-transform: translate3d(5%,85%,0);
+	transform: translate3d(5%,85%,0);
+}
+.noUi-marker-horizontal.noUi-marker-large {
+	height: 45px;
+}
+
+.links {
+	position: absolute;
+	z-index: 500;
+	top: 0;
+	right: 0;
+	width: 20em;
+	background-color: #fff;
+	padding: 1em;
+	list-style: none;
+}
