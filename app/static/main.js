@@ -55,12 +55,7 @@ APP = (function () {
 		var mapbox_style_contrast = "annabannanna/ciotz5593002ldqnf8a87z6jg";
 
 		var mapbox_key = "pk.eyJ1IjoiYW5uYWJhbm5hbm5hIiwiYSI6ImNpbWdscW40bDAwMDgzNG0yZ2FxYTNhZ2YifQ.VmWzlEEOgWa4ydTmqfS06g";
-		var mapbox_url;
-		if(id === "map_places"){
-			mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style_light+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
-		} else {
-			mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style_contrast+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
-		}
+		var mapbox_url = "https://api.mapbox.com/styles/v1/"+mapbox_style_light+"/tiles/{z}/{x}/{y}?access_token="+mapbox_key;
 
 		var layer = L.tileLayer(mapbox_url, {
 			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -379,6 +374,26 @@ APP = (function () {
 
 		show_layer("events","events");
 		route_layer("events","events",0);
+		show_event_data(events.features[0]);
+	}
+
+	function show_event_data(data){
+		if (!data.properties){
+			return;
+		}
+		var props = data.properties;
+		var title = props.name;
+		var desc = [
+		"<p>",
+		props.description,
+		"</p>",
+		"<p>",
+		props.category,
+		"</p>"
+		].join("");
+
+		document.querySelector("#details_events .title").textContent = title;
+		document.querySelector("#details_events .description").innerHTML = desc;
 	}
 
 	function load_tfl(error,tfl){
@@ -388,10 +403,8 @@ APP = (function () {
 		var t;
 		var myIcon;
 		var marker;
-		var bikesLayer = L.layerGroup();
-		var busesLayer = L.layerGroup();
-		var buses_data = [];
-		var bikes_data = [];
+		var layer = new L.layerGroup();
+		var data = [];
 		for (var i = tfl.places.length - 1; i >= 0; i--) {
 			t = tfl.places[i];
 			if(t.id == stop_details.id){
@@ -407,10 +420,10 @@ APP = (function () {
 					marker = L.marker([t.lat,t.lon], {icon: myIcon});
 					marker.on("click",click_tfl);
 					marker._tfl_data = t;
-					marker.addTo(busesLayer);
-					buses_data.push(t);
-					continue;
+					marker.addTo(layer);
+					data.push(t);
 				}
+				continue;
 			}
 			if (t.placeType == "BikePoint"){
 					myIcon = L.icon({
@@ -418,33 +431,58 @@ APP = (function () {
 						iconSize: [32, 32],
 						iconAnchor: [16, 16]
 					});
-					L.marker([t.lat,t.lon], {icon: myIcon});
+					marker = L.marker([t.lat,t.lon], {icon: myIcon});
 					marker.on("click",click_tfl);
 					marker._tfl_data = t;
-					marker.addTo(bikesLayer);
-					bikes_data.push(t);
+					marker.addTo(layer);
+					data.push(t);
 					continue;
 			}
 		}
-		APP.data.tfl_buses = buses_data;
-		APP.data.tfl_bikes = bikes_data;
-		APP.layers.tfl_bikes = bikesLayer;
-		APP.layers.tfl_buses = busesLayer;
+		APP.data.tfl = data;
+		APP.layers.tfl = layer;
 
-		show_layer("tfl_buses","buses");
-		route_layer("tfl_buses","buses",0);
+		show_layer("tfl","buses");
+		route_layer("tfl","buses",0);
+		show_tfl_data(data[0]);
 	}
 
 	function click_tfl(e){
+		console.log(e);
 		var data = e.target._tfl_data;
-		var title = data.commonName + " " + data.indicator;
-		var lines = [];
-		for (var i = data.lines.length - 1; i >= 0; i--) {
-			lines.push(data.lines[i].name);
-		}
-		lines = lines.join(", ");
+		show_tfl_data(data);
+	}
+	function show_tfl_data(data){
+		var title;
+		var desc ="";
+		var pos = {lat: data.lat, lng:data.lon};
 
-		route_to(APP.location, e.latlng, "buses");
+		if (data.placeType == "StopPoint"){
+			title = data.commonName
+			if(data.indicator){
+				title += " " + data.indicator;
+			}
+			var lines = [];
+			if(data.lines){
+				for (var i = data.lines.length - 1; i >= 0; i--) {
+					lines.push(data.lines[i].name);
+				}
+			}
+			desc = lines.join(", ");
+		} else {
+			title = data.commonName;
+			var bikes = _.findWhere(data.additionalProperties,{key:"NbBikes"});
+			var docks = _.findWhere(data.additionalProperties,{key:"NbEmptyDocks"});
+			if(bikes && docks){
+				desc = "Bikes available: "+bikes.value + " Docks available: "+docks.value;
+			}
+			if(APP.activeLayers.buses == "tfl_bikes"){
+				route_to(APP.location, pos, "buses");
+			}
+		}
+		document.querySelector("#details_buses .title").textContent = title;
+		document.querySelector("#details_buses .description").textContent = desc;
+		route_to(APP.location, pos, "buses");
 	}
 
 	function route_to(start,end,map_id){
@@ -472,8 +510,8 @@ APP = (function () {
 				show: false,
 				fitSelectedRoutes: false, // enable auto-zoom
 				lineOptions: {
-					styles: [{color: '#f44336', opacity: 1, weight: 9}],
-					missingRouteStyles: [{color: '#f44336', opacity: 1, weight: 9}]
+					styles: [{color: '#000000', opacity: 1, weight: 7}],
+					missingRouteStyles: [{color: '#000000', opacity: 1, weight: 7}]
 				}
 			});
 			APP.routers[map_id].addTo(APP.maps[map_id]);
@@ -505,10 +543,10 @@ APP = (function () {
 
 	function centerDot(ll){
 		return L.circleMarker(ll, {
-			fillColor:"#f44336",
+			fillColor:"#000000",
 			fillOpacity:1,
 			stroke: false,
-			radius: 12,
+			radius: 7,
 			clickable: false
 		});
 	}
@@ -527,17 +565,17 @@ APP = (function () {
 		centerDot(ll).addTo(APP.maps.places);
 		centerDot(ll).addTo(APP.maps.events);
 
-		// d3.json(base_url + "/tfl/Place?lat="+location.lat+"&lon="+location.lng+"&radius="+radius,load_tfl);
+		d3.json(base_url + "/tfl/Place?lat="+location.lat+"&lon="+location.lng+"&radius="+radius,load_tfl);
 		d3.json(base_url+"/forecast?lat="+location.lat+"&lon="+location.lng,load_weather);
-		// d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
+		d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
 
 		// load places (layers not yet added to map)
-		// d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
-		// d3.json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
-		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe",load_places_cafe);
-		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=restaurant",load_places_restaurant);
-		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=park",load_places_park);
-		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=atm",load_places_atm);
+		d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
+		d3.json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
+		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe",load_places_cafe);
+		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=restaurant",load_places_restaurant);
+		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=park",load_places_park);
+		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=atm",load_places_atm);
 
 		var slider = document.getElementById('timeline');
 		create_timeline(slider);

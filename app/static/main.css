@@ -45,6 +45,7 @@ white  #fff
 }
 html, body {
     font-family: 'merriweather', serif;
+    margin: 0;
 }
 .text-content-wrap{
     max-width: 30em;
@@ -73,28 +74,44 @@ h3{
 }
 .stop-title .space{
     display: inline-block;
-    width: 20%;
+    width: 12%;
+    padding: 0 5%;
 }
-@media screen and (min-width: 1400px) {
+@media screen and (min-width: 1120px) {
     .stop-title{
         position: absolute;
         width: 100%;
-        top: 375px;
+        margin-top: 30%;
     }
     body {
         margin-top: 25px;
     }
 }
+@media screen and (min-width: 1550px) {
+    .stop-title .space{
+        width: 15%;
+        padding: 0 10%;
+    }
+}
+@media screen and (min-width: 1760px) {
+    .stop-title{
+        margin-top: 530px;
+    }
+}
 .maps {
     text-align: center;
+    margin: 0 10px;
 }
+.details,
 .map-wrap{
     display: inline-block;
     width: 33.3333%;
-    padding: 0 20px; /* TODO media query to ensure max height of square map */
+    padding: 0 20px;
+    vertical-align: top;
 }
+.details-inner-wrap,
 .map-inner-wrap{
-    max-width: 20em;
+    max-width: 30em;
     margin: 0 auto;
 }
 .map {
@@ -106,15 +123,12 @@ h3{
     border-radius: 50%;
     transform: translateZ(0);
 
-    border: 11px solid #000;
-    margin-left: -11px;
+    border: 16px solid #000;
+    margin-left: -16px;
     box-sizing: content-box;
 }
 .map-wrap.full-page {
     width: 100%;
-}
-#map_buses .leaflet-tile-pane{
-    opacity: 0.2;
 }
 .marker-busstop img {
     position: absolute;
@@ -154,20 +168,21 @@ h3{
 .timeline-wrap {
     width:100%;
     z-index: 500;
-    /*bottom: 30px;*/
+    background: #fff;
+    background-image: linear-gradient(to bottom, #fff, #fff 56%, #000 56%, #000 60%, #fff 60%,#fff);
     left: 0px;
     right: 0px;
-    background: #fff;
-    padding: 70px 45px 50px;
+    padding: 70px 55px 50px;
 }
 .timeline_label,
 .timeline_label_bottom{
     position: absolute;
     font-family: 'bebas_neue';
     font-size: 1.75em;
-
+    font-weight: bold;
 }
 .timeline_label_bottom{
+    top:10px;
     left: -60px;
     width: 120px;
     text-align: center;
@@ -212,7 +227,7 @@ h3{
     background-image: url("/static/icons/rain.png");
 }
 #timeline .noUi-handle {
-    top: -35px;
+    top: -30px;
     width: 0px;
     height: 0px;
     border-color: black white white white;
