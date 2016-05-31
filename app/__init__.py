@@ -295,4 +295,4 @@ def plaques():
 
 app.debug = DEBUG
 if __name__ == "__main__":
-    app.run()
+    app.run(port=5050)

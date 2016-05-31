@@ -3,21 +3,29 @@
 
 APP = (function () {
 
-	var APP = {};
+	var APP = {
+
+	};
+	APP.maps = {
+		buses: undefined,
+		places: undefined,
+		events: undefined
+	};
+	APP.data ={};
 	var base_url;
 
-	var location = document.location + "";
-	if(location.match("localhost")){
+	var url = document.location + "";
+	if(url.match("localhost")){
 		base_url = "http://localhost:5000";
 	} else {
 		base_url = "http://casa-dv.made-by-tom.co.uk";
 	}
 
-	var now = moment().valueOf();
-	var then = moment().add(7,'days').valueOf();
-	var radius = 300;
+	var now = APP.now = moment().valueOf();
+	var then = APP.then = moment().add(7,'days').valueOf();
+	var radius = APP.radius = 300;
 
-	var location = {
+	var location = APP.location = {
 		lat:51.501603,
 		lng:-0.125984,
 		zoom: 16
@@ -26,10 +34,6 @@ APP = (function () {
 		location.lat = stop_details.lat;
 		location.lng = stop_details.lng;
 	}
-
-	var map_buses = APP.map_buses;
-	var map_places = APP.map_buses;
-	var map_events = APP.map_buses;
 
 	function load_map(id,location){
 		var map = L.map(id,
@@ -168,6 +172,19 @@ APP = (function () {
 	}
 
 	function load_weather(weather) {
+		APP.data.weather = weather;
+	}
+
+	function getWeatherAtTime(time){
+		//takes the time
+		if(meteo && meteo.hourly && meteo.hourly.data) {
+			// looks in the array of hourly data
+			var hourly = meteo.hourly.data;
+
+			var diff = time - slider.start;
+			var index = Math.floor(diff / 1000 / 60 / 60);
+			return hourly[index];
+		}
 	}
 
 	function load_plaques(plaques) {
@@ -191,7 +208,7 @@ APP = (function () {
 					// TODO active/selected state per marker
 				});
 			}
-		}).addTo(map_places);
+		}).addTo(APP.maps.places);
 	}
 
 	function load_wiki(wiki) {
@@ -210,7 +227,7 @@ APP = (function () {
 					console.log(feature.properties);
 				});
 			}
-		}).addTo(map_places);
+		}).addTo(APP.maps.places);
 
 		route_to(
 			location,
@@ -218,7 +235,7 @@ APP = (function () {
 				lng: wiki.features[0].geometry.coordinates[0],
 				lat: wiki.features[0].geometry.coordinates[1]
 			},
-			map_places
+			APP.maps.places
 		);
 	}
 
@@ -272,7 +289,7 @@ APP = (function () {
 					console.log(feature.properties);
 				});
 			}
-		}).addTo(map_events);
+		}).addTo(APP.maps.events);
 	}
 
 	function load_tfl(tfl){
@@ -293,7 +310,7 @@ APP = (function () {
 						iconSize: [32, 32],
 						iconAnchor: [16, 16]
 					});
-					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(map_buses);
+					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(APP.maps.buses);
 					continue;
 				}
 			}
@@ -303,7 +320,7 @@ APP = (function () {
 						iconSize: [32, 32],
 						iconAnchor: [16, 16]
 					});
-					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(map_buses);
+					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(APP.maps.buses);
 					continue;
 			}
 		}
@@ -315,12 +332,6 @@ APP = (function () {
 				L.latLng(start),
 				L.latLng(end)
 			],
-			// plan: L.Routing.Plan([
-			// 	L.latLng(start),
-			// 	L.latLng(end)
-			// ],{
-			// 	createMarker: function(){return false;}
-			// }),
 			draggableWaypoints: false,
 			addWaypoints: false,
 			createMarker: function(i,w){
@@ -328,7 +339,7 @@ APP = (function () {
 			},
 			autoRoute: false,
 			show: false,
-			fitSelectedRoutes: false,
+			fitSelectedRoutes: true, // enable auto-zoom
 			lineOptions: {
 				styles: [{color: 'black', opacity: 1, weight: 9}],
 				missingRouteStyles: [{color: 'black', opacity: 1, weight: 9}]
@@ -347,18 +358,21 @@ APP = (function () {
 		});
 	}
 
+	function draw(){
+		update_time_globals();
+	}
+
 	function setup(){
-		map_buses = load_map('map_buses',location);
-		map_places = load_map('map_places',location);
-		map_events = load_map('map_events',location);
+		APP.maps.buses = load_map('map_buses',location);
+		APP.maps.places = load_map('map_places',location);
+		APP.maps.events = load_map('map_events',location);
 
 		var ll = L.latLng(location);
-		blackDot(ll).addTo(map_buses);
-		blackDot(ll).addTo(map_places);
-		blackDot(ll).addTo(map_events);
+		blackDot(ll).addTo(APP.maps.buses);
+		blackDot(ll).addTo(APP.maps.places);
+		blackDot(ll).addTo(APP.maps.events);
 
-		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe",load_places);
-		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=restaurant",load_places);
+		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe,restaurant,park,atm",load_places);
 		d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
 		d3.json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
 		d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
@@ -371,6 +385,9 @@ APP = (function () {
 		window.sliderSliderStart = now;
 		window.sliderTime = now;
 		update_time_globals();
+		if(autoplay){
+			window.requestAnimationFrame(draw);
+		}
 	}
 
 	setup();
