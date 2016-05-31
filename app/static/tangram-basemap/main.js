@@ -115,7 +115,6 @@ map = (function () {
 	slider.noUiSlider.on('update', function( values, handle ) {
 		window.sliderTime = parse_slider_value(values);
 		update_time_globals();
-		daycycle();
 	});
 
 	function parse_slider_value(values){
