@@ -111,6 +111,63 @@ h3,h4{
         margin-top: 530px;
     }
 }
+input[type="radio"]{
+    position: absolute;
+    top: -10000px;
+    left: -10000px;
+    opacity: 0;
+    height: 0;
+    width: 0;
+    overflow: hidden;
+}
+input[type="radio"] + label{
+    background-position: 0 0;
+    background-repeat: none;
+    height: 48px;
+    width: 48px;
+    display: inline-block;
+    text-indent: -200px;
+    overflow: hidden;
+}
+input[type="radio"]:checked + label{
+    background-position: 0 48px;
+}
+label[for="places-coffee"] {
+    background-image: url('/static/icons/coffee-sprite.png');
+}
+label[for="places-restaurant"] {
+    background-image: url('/static/icons/restaurant-sprite.png');
+}
+label[for="places-park"] {
+    background-image: url('/static/icons/park-sprite.png');
+}
+label[for="places-atm"] {
+    background-image: url('/static/icons/atm-sprite.png');
+}
+label[for="places-wikipedia"] {
+    background-image: url('/static/icons/wikipedia-sprite.png');
+}
+label[for="places-plaques"] {
+    background-image: url('/static/icons/plaques-sprite.png');
+}
+label[for="events-beauty"] {
+    background-image: url('/static/icons/beauty-sprite.png');
+}
+label[for="events-culture"] {
+    background-image: url('/static/icons/culture-sprite.png');
+}
+label[for="events-education"] {
+    background-image: url('/static/icons/education-sprite.png');
+}
+label[for="events-meltingpot"] {
+    background-image: url('/static/icons/melting-pot-sprite.png');
+}
+label[for="events-restaurant"] {
+    background-image: url('/static/icons/restaurant-sprite.png');
+}
+label[for="events-sport"] {
+    background-image: url('/static/icons/sport-sprite.png');
+}
 .maps {
     text-align: center;
     margin: 0 10px;

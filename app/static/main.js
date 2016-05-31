@@ -496,7 +496,6 @@ APP = (function () {
 	}
 
 	function click_tfl(e){
-		console.log(e);
 		var data = e.target._tfl_data;
 		show_tfl_data(data);
 	}
