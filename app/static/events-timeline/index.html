@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<!--Head : meta is a tag < attribute = value >
+way of writing strings is <tagname> XXX </tagname>
+character (encoding = unicode utf-8 to be chosen always because most compatible)
+normally html and css together -->
+
+<head>
+	<title>The events of the future</title>
+	<meta charset="utf-8">
+	<link href="leaflet_main.css" rel="stylesheet"/> <!-- string that does not appear on the HTML-->
+	<link rel="stylesheet" href="leaflet/leaflet.css" />  <!-- link my js to html with a script tag-->
+
+    <link rel="stylesheet" href="leaflet.timeline.min.css"/>
+
+
+</head>
+<body>
+	<h1> LONDON AROUND YOU</h1>
+	<p>The weather now: <span class="weather"></span></p>
+	<div id="mapid"></div>
+	<div id="time"></div>
+	<h2> LONDON AROUND ME</h2>
+	<a href="https://uk.linkedin.com/in/anouchka-lettré-73339568">CV Anouchka Lettré</a>
+
+
+	<!-- Preparting the libraries whish need to be copied in my folder css+js files for each-->
+	<script type='text/javascript' src="leaflet/leaflet.js"></script> <!-- or use leaflet-src.js -->
+	<!-- moment = library to manipulate dates -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
+	<!-- loads timeline library -->
+	<script src="leaflet.timeline.min.js"></script>
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script> <!--loaded from the web so you do not ,eed tp cpopy it into the folder, but you need to be connected to the web-->
+	<script type='text/javascript' src="leaflet_main.js"></script> <!-- link my js to html with a script tag-->
+
+
+
+
+</body>
+<html>
+<!--make a class for the different buttons, then call it in the css with a .roundbottom
+</button>class= button

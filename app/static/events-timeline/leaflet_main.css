@@ -1,0 +1,16 @@
+h1,h2 {
+	color: pink;
+}
+html, body {
+	height: 90%;
+}
+#mapid {
+	height: 90%;
+	background-color: #000;
+}
+.leaflet-left {
+	width: 100%;
+}
+.leaflet-tile-pane{
+	opacity: 0.5;
+}
