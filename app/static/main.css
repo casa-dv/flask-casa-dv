@@ -111,6 +111,9 @@ h3,h4{
         margin-top: 530px;
     }
 }
+form {
+    text-align: center;
+}
 input[type="radio"]{
     position: absolute;
     top: -10000px;

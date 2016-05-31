@@ -2,14 +2,13 @@
 	background-color: #18ffff;
 	}
 .marker-cluster-medium{
-	background-color: #ffff00;
+	background-color: #27bd42;
+	color: #fff;
 	}
 .marker-cluster-large {
 	background-color: #f44336;
 	color: #fff;
 	}
-
-
 .marker-cluster {
 	background-clip: padding-box;
 	border-radius: 20px;
@@ -21,6 +20,7 @@
 	text-align: center;
 	border-radius: 20px;
 	font: 18px "bebas_neue", sans-serif;
+	font-weight: bold;
 	}
 .marker-cluster span {
 	line-height: 40px;

@@ -117,19 +117,21 @@ APP = (function () {
 		document.querySelector(".noUi-origin").appendChild(label);
 		document.querySelector(".noUi-origin").appendChild(label_bottom);
 
-		slider.noUiSlider.on('update', function( values, handle ) {
-			var sliderTime = window.sliderTime = parse_slider_value(values);
-
-			// label Mon 12:05
-			var time = moment(sliderTime).format("ddd HH:mm");
-			document.querySelector(".timeline_label_bottom").textContent = time;
-
-			display_weather_data(sliderTime);
-
-			filter_events_by_time(sliderTime);
-			filter_places_by_time(sliderTime);
-		});
+		onSliderUpdateThrottled = _.throttle(onSliderUpdate, 100);
+		slider.noUiSlider.on('update', onSliderUpdateThrottled);
 		return slider;
+	}
+	function onSliderUpdate( values, handle ) {
+		var sliderTime = window.sliderTime = parse_slider_value(values);
+
+		// label Mon 12:05
+		var time = moment(sliderTime).format("ddd HH:mm");
+		document.querySelector(".timeline_label_bottom").textContent = time;
+
+		display_weather_data(sliderTime);
+
+		filter_events_by_time(sliderTime);
+		filter_places_by_time(sliderTime);
 	}
 
 	function display_weather_data(time){
@@ -164,6 +166,8 @@ APP = (function () {
 
 	function load_plaques(error,plaques) {
 		if(!plaques || !plaques.features){
+			APP.data.plaques = [];
+			APP.layers.plaques = L.layerGroup();
 			return;
 		}
 		var layer = L.geoJson(plaques,{
@@ -192,7 +196,7 @@ APP = (function () {
 		APP.layers.plaques = layer;
 	}
 	function show_plaques_data(data){
-		if(!data.properties){
+		if(!data || !data.properties){
 			return;
 		}
 		var props = data.properties;
@@ -206,6 +210,8 @@ APP = (function () {
 
 	function load_wiki(error,wiki) {
 		if(error || !wiki.features){
+			APP.data.wiki = [];
+			APP.layers.wiki = L.layerGroup();
 			return;
 		}
 		var layer = L.geoJson(wiki,{
@@ -268,7 +274,9 @@ APP = (function () {
 
 	function load_places_cafe(error,places) {
 		load_places_data(error,places,"cafe");
+		// add layer to map on load
 		show_layer("places_cafe","places");
+		// show place and route to it
 		route_layer("places_cafe","places",0);
 		show_places_data(APP.data.places_cafe[0], "Cafe");
 	}
@@ -325,7 +333,7 @@ APP = (function () {
 		return layer;
 	}
 	function show_places_data(data,type){
-		if (!data.properties){
+		if (!data || !data.properties){
 			return;
 		}
 		var props = data.properties;
@@ -430,6 +438,8 @@ APP = (function () {
 
 	function load_tfl(error,tfl){
 		if (error || !tfl.places){
+			APP.data.tfl = [];
+			APP.layers.tfl = L.layerGroup();
 			return;
 		}
 		var t;
@@ -566,16 +576,20 @@ APP = (function () {
 		if (active){
 			APP.maps[map_idx].removeLayer(APP.layers[active]);
 		}
-		APP.maps[map_idx].addLayer(APP.layers[layer_idx]);
+		if(APP.layers[layer_idx] && APP.maps[map_idx]){
+			APP.maps[map_idx].addLayer(APP.layers[layer_idx]);
+		}
 		APP.activeLayers[map_idx] = layer_idx;
 	}
 
 	function route_layer(layer_idx,map_idx,marker_idx){
 		if(!APP.layers[layer_idx]){
+			route_to(APP.location, APP.location, map_idx);
 			return;
 		}
 		var markers = APP.layers[layer_idx].getLayers();
 		if(!markers || !markers.length){
+			route_to(APP.location, APP.location, map_idx);
 			return;
 		}
 
@@ -682,7 +696,6 @@ APP = (function () {
 			var is_open = open <= hour_now && close >= hour_now;
 			return is_open;
 		});
-		console.log(filtered_markers);
 
 		if(filtered_markers && filtered_markers.length){
 			route_to(APP.location, filtered_markers[0].getLatLng(), "places");
