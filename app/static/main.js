@@ -1,6 +1,17 @@
 /*jslint browser: true*/
 /*global Tangram, L */
 
+/**
+ * Global APP variable functions as a plain-object data store
+ * for ease of reference.
+ *
+ * Control flow starts at the bottom of the page, with 'setup'.
+ * Setup creates the maps and slider, and loads data, with callbacks to add
+ * each dataset to the map.
+ * Each callback stores the data and map layers in the APP global, and sets up
+ * event listeners for interaction with the map, as well as loading a first
+ * set of item details.
+ */
 APP = (function () {
 
 	var APP = {
@@ -61,65 +72,7 @@ APP = (function () {
 			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 		}).addTo(map);
 
-		// var layer = Tangram.leafletLayer({
-		// 	scene: 'static/scene.yaml',
-		// 	preUpdate: pre_update,
-		// 	// attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a>'
-		// 	attribution: ''
-		// });
-		// window.addEventListener('load', function () {
-		// 	layer.addTo(map);
-		// });
 		return map;
-	}
-
-	function pre_update(will_render) {
-		if (!will_render) {
-			return;
-		}
-		daycycle(this);
-	}
-
-	function daycycle(scene) {
-		var t = window.sliderTime; // unix ms
-		var h = window.sliderHour;
-		var hx = window.sliderHourIndex;
-		var dx = window.sliderDayIndex;
-
-		var w = (3.14159 * (h / 12)) + 3.14159;
-
-		var x = Math.sin(w);
-		var y = Math.sin(w+(3.14159/2)); // 1/4 offset
-
-		// offset blue and red for sunset and moonlight effect
-		var B = x + Math.abs(Math.sin(t+(3.14159*0.5)))/4;
-		var R = y + Math.abs(Math.sin(t*2))/4;
-
-		scene.lights.sun.diffuse = [R, y, B, 1]; // TODO look in weather for colours and sunsetTime/sunriseTime
-		scene.lights.sun.direction = [x, 1, -0.5];
-
-		var px = Math.min(x, 0); // positive x
-		var py = Math.min(y, 0); // positive y
-
-		// light up the roads at night
-		scene.styles["roads"].material.emission.amount = [-0.5-py, -0.5-py, -0.5-py, 1];
-
-		// turn water black at night
-		scene.styles["water"].material.ambient.amount = [py+1, py+1, py+1, 1];
-		scene.styles["water"].material.diffuse.amount = [py+1, py+1, py+1, 1];
-
-		// turn up buildings' ambient response at night
-		var ba = -py*.75+.75;
-		scene.styles["buildings"].material.ambient.amount = [ba, ba, ba, 1];
-
-		scene.animated = true;
-	}
-
-	function update_time_globals(){
-		var t = window.sliderTime;
-		window.sliderHour = (+(moment(t).format('k')) - 1);
-		window.sliderHourIndex = Math.floor((t - window.sliderSliderStart)/(1000*60*60));
-		window.sliderDayIndex = Math.floor(window.sliderHourIndex / 24);
 	}
 
 	function create_timeline(slider){
@@ -145,7 +98,9 @@ APP = (function () {
 				},
 				format: {
 					to: function(value){
-						return '';	// display no labels
+						// display no labels
+						return '';
+						// display day and hours
 						// if(+moment(value).format('k') === 24){
 						// 	return moment(value).format('dddd');
 						// } else {
@@ -170,7 +125,9 @@ APP = (function () {
 			document.querySelector(".timeline_label_bottom").textContent = time;
 
 			display_weather_data(sliderTime);
-			update_time_globals();
+
+			filter_events_by_time(sliderTime);
+			filter_places_by_time(sliderTime);
 		});
 		return slider;
 	}
@@ -686,6 +643,57 @@ APP = (function () {
 			}
 		}
 	}
+	function filter_places_by_time(time){
+		var day = +moment(time).format('d');
+		var hour_now = +moment(time).format('HHmm');
+		var filtered_markers = filter_layer(APP.activeLayers.places,"places",function(marker){
+			var opening_hours = marker.feature.properties.opening_hours;
+			// no opening hours => always open?
+			if (!opening_hours){
+				return true;
+			}
+			// each period is like
+			// {
+			//   "close": {
+			//     "day": 0,
+			//     "time": "2100"
+			//   },
+			//   "open": {
+			//     "day": 0,
+			//     "time": "0900"
+			//   }
+			// },
+			// day: 0 is Sunday
+
+			// get today's opening hours
+			var period_today = _.filter(opening_hours,function(period){
+				return period.open.day == day;
+			});
+
+			if(!period_today.length){
+				return false;
+			}
+
+			// coerce all vars to an integer from "2300" format strings
+			var period = period_today[0];
+			var open = +period.open.time;
+			var close = +period.close.time;
+
+			var is_open = open <= hour_now && close >= hour_now;
+			return is_open;
+		});
+		console.log(filtered_markers);
+
+		if(filtered_markers && filtered_markers.length){
+			route_to(APP.location, filtered_markers[0].getLatLng(), "places");
+			var type = APP.activeLayers.places.split("_")[1];
+			if(type){
+				show_places_data(filtered_markers[0].feature, type);
+			}
+		} else {
+			route_to(APP.location, APP.location, "places");
+		}
+	}
 	function event_type_change(){
 		var el = document.querySelector("#details_events input:checked");
 		var cat = el.id.split("-")[1];
@@ -702,6 +710,20 @@ APP = (function () {
 			show_event_data(filtered_markers[0].feature);
 		} else {
 			show_event_not_found(cat_name);
+			route_to(APP.location, APP.location, "events");
+		}
+	}
+	function filter_events_by_time(time){
+		var filtered_markers = filter_layer("events","events",function(marker){
+			var start = moment(marker.feature.properties.start);
+			var end = moment(marker.feature.properties.end);
+			return  start <= time &&  end >= time;
+		});
+
+		if(filtered_markers && filtered_markers.length){
+			route_to(APP.location, filtered_markers[0].getLatLng(), "events");
+			show_event_data(filtered_markers[0].feature);
+		} else {
 			route_to(APP.location, APP.location, "events");
 		}
 	}
@@ -761,7 +783,8 @@ APP = (function () {
 	}
 
 	function draw(){
-		update_time_globals();
+		// move slider
+		// loop through filters
 	}
 
 	function setup(){
@@ -789,9 +812,8 @@ APP = (function () {
 		var slider = document.getElementById('timeline');
 		create_timeline(slider);
 
-		window.sliderSliderStart = now;
-		window.sliderTime = now;
-		update_time_globals();
+		APP.sliderTime = now;
+
 		if(autoplay){
 			window.requestAnimationFrame(draw);
 		}
