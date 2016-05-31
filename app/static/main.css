@@ -7,30 +7,9 @@
 }
 @font-face {
     font-family: 'bebas_neue';
-    src: url('/static/fonts/bebasneue_book-webfont.woff2') format('woff2'),
-         url('/static/fonts/bebasneue_book-webfont.woff') format('woff');
-    font-weight: 500;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'bebas_neue';
     src: url('/static/fonts/bebasneue_regular-webfont.woff2') format('woff2'),
          url('/static/fonts/bebasneue_regular-webfont.woff') format('woff');
     font-weight: normal;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'bebas_neue';
-    src: url('/static/fonts/bebasneue_light-webfont.woff2') format('woff2'),
-         url('/static/fonts/bebasneue_light-webfont.woff') format('woff');
-    font-weight: 300;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'bebas_neue';
-    src: url('/static/fonts/bebasneue_thin-webfont.woff2') format('woff2'),
-         url('/static/fonts/bebasneue_thin-webfont.woff') format('woff');
-    font-weight: 200;
     font-style: normal;
 }
 @font-face {
@@ -62,6 +41,28 @@ html, body {
 }
 h1,h2,h3,h4 {
     font-family: 'bebas_neue', sans-serif;
+}
+h1,h2,h3{
+    text-align: center;
+}
+h1{
+    color: #ccc;
+    font-size: 8em;
+    margin: 0;
+}
+h2{
+    margin: 0.2em 0px 0px;
+    font-size: 3em;
+}
+h3{
+    font-size: 2em;
+}
+.stop-title{
+    margin-bottom: -0.5em;
+}
+.stop-title .space{
+    display: inline-block;
+    width: 20%;
 }
 /*
 blue   #18ffff
@@ -133,9 +134,6 @@ white  #fff
 /* Hide zoom control on touch devices or move it when below a certain size, which interferes with demo parent container overlay */
 .leaflet-touch .leaflet-control-zoom {
     display: none;
-}
-.leaflet-routing-alternatives-container{
-    /*display: none;*/
 }
 /* timeline overrides */
 .timeline-wrap {

@@ -10,22 +10,25 @@
 	<link rel="stylesheet" href="/static/main.css">
 </head>
 <body>
-	<h1>{{data.commonName}}</h1>
+	<h1 class="stop-title">What<span class="space"></span>Now?</h1>
 	<div class="maps">
 		<div class="map-wrap">
 		<div class="map-inner-wrap">
 			<div id="map_buses" class="map"></div>
 		</div>
+		<h2>Travel</h2>
 		</div>
 		<div class="map-wrap">
 		<div class="map-inner-wrap">
 			<div id="map_places" class= "map"></div>
 		</div>
+		<h2>Chill</h2>
 		</div>
 		<div class="map-wrap">
 		<div class="map-inner-wrap">
 			<div id="map_events" class= "map"></div>
 		</div>
+		<h2>Plan</h2>
 		</div>
 	</div>
 	<div class="timeline-wrap">
@@ -38,9 +41,11 @@
 		</div>
 		<div id="details_events" class="details"></div>
 	</div>
+	<h3>{{data.commonName}}</h3>
 
 	<script src="/static/leaflet-0.7.5.js"></script>
 	<script src="/static/leaflet-routing-machine.min.js"></script>
+	<script src="/static/lrm-mapbox-1.0.4.min.js"></script>
 	<script src="/static/moment.min.js"></script>
 	<script src="/static/d3.v3.min.js"></script>
 	<script src="/static/nouislider.min.js"></script>

@@ -50,15 +50,19 @@ def stop(stop_id):
 	details_r = tfl_request({},"StopPoint/"+stop_id)
 	details = json.loads(details_r["text"])
 
-	if "httpStatusCode" in details and details["httpStatusCode"] == 404:
+	details = parse_stop(details,stop_id)
+
+	if details is None or ("httpStatusCode" in details and details["httpStatusCode"] == 404) or "id" not in details:
 		return make_response("Stop not found. Try <a href=\"/stops/490015764C\">Covent Garden / Catherine Street</a>", 400)
 
-	details = parse_stop(details,stop_id)
 	# return json_response(json.dumps(details))
 	return render_template("stop.html",data=details)
 
 def parse_stop(stop,stop_id):
-	if(stop["id"] == stop_id):
+	if type(stop) is not dict:
+		return None
+
+	if "id" in stop and stop["id"] == stop_id:
 		return stop
 
 	if("children" in stop and len(stop["children"])>0):

@@ -4,19 +4,16 @@
 APP = (function () {
 
 	var APP = {
-
+		maps: {},
+		routers: {},
+		data: {}
 	};
-	APP.maps = {
-		buses: undefined,
-		places: undefined,
-		events: undefined
-	};
-	APP.data ={};
+	var autoplay = APP.autoplay = false;
 	var base_url;
 
 	var url = document.location + "";
 	if(url.match("localhost")){
-		base_url = "http://localhost:5000";
+		base_url = "http://localhost:5050";
 	} else {
 		base_url = "http://casa-dv.made-by-tom.co.uk";
 	}
@@ -171,7 +168,7 @@ APP = (function () {
 		return +(values[0]);
 	}
 
-	function load_weather(weather) {
+	function load_weather(error,weather) {
 		APP.data.weather = weather;
 	}
 
@@ -187,7 +184,7 @@ APP = (function () {
 		}
 	}
 
-	function load_plaques(plaques) {
+	function load_plaques(error,plaques) {
 		if(!plaques.features){
 			return;
 		}
@@ -205,13 +202,16 @@ APP = (function () {
 				layer.on("click",function(){
 					var props = feature.properties;
 					document.querySelector(".place_title").textContent = props.inscription;
-					// TODO active/selected state per marker
+					route_to(APP.location, {
+						lng: feature.geometry.coordinates[0],
+						lat: feature.geometry.coordinates[1]
+					}, "places");
 				});
 			}
 		}).addTo(APP.maps.places);
 	}
 
-	function load_wiki(wiki) {
+	function load_wiki(error,wiki) {
 		L.geoJson(wiki,{
 			pointToLayer: function(feature, latlng) {
 				var myIcon = L.icon({
@@ -224,26 +224,25 @@ APP = (function () {
 			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
-					console.log(feature.properties);
+					route_to(APP.location, {
+						lng: feature.geometry.coordinates[0],
+						lat: feature.geometry.coordinates[1]
+					}, "places");
 				});
 			}
 		}).addTo(APP.maps.places);
 
 		route_to(
-			location,
+			APP.location,
 			{
 				lng: wiki.features[0].geometry.coordinates[0],
 				lat: wiki.features[0].geometry.coordinates[1]
 			},
-			APP.maps.places
+			"places"
 		);
 	}
 
-	function load_places(places) {
-
-	}
-
-	function load_events(events) {
+	function load_places(error,places) {
 		if(!events.features){
 			return;
 		}
@@ -286,18 +285,85 @@ APP = (function () {
 			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
-					console.log(feature.properties);
+					route_to(APP.location, {
+						lng: feature.geometry.coordinates[0],
+						lat: feature.geometry.coordinates[1]
+					}, "events");
+				});
+			}
+		}).addTo(APP.maps.places);
+
+		APP.data.places = places.features;
+		route_to(
+			APP.location,
+			{
+				lng: places.features[0].geometry.coordinates[0],
+				lat: places.features[0].geometry.coordinates[1]
+			},
+			"places"
+		);
+	}
+
+	function load_events(error,events) {
+		if(!events.features){
+			return;
+		}
+		L.geoJson(events,{
+			pointToLayer: function(feature, latlng) {
+				var icon;
+				switch (feature.properties.category) {
+					case 'Business & Education':
+						icon = "education.png";
+						break;
+					case 'Culture & Art':
+						icon = "culture.png";
+						break;
+					case 'Fashion & Health':
+						icon = "beauty.png";
+						break;
+					case 'Food & Drink':
+						icon = "restaurant.png";
+						break;
+					case 'Melting Pot & Co':
+						icon = "melting-pot.png";
+						break;
+					case 'Sport & Travel':
+						icon = "sport.png";
+						break;
+					default:
+						icon = "melting-pot.png";
+						break;
+				}
+				var myIcon = L.icon({
+					iconUrl: "/static/icons/"+icon,
+					// iconRetinaUrl: 'my-icon@2x.png',
+					// iconSize: [48, 48],
+					// iconAnchor: [24, 24]
+					iconSize: [32, 32],
+					iconAnchor: [16, 16]
+				});
+
+				return L.marker(latlng, {icon: myIcon});
+			},
+			onEachFeature: function (feature, layer) {
+				layer.on("click",function(){
+					route_to(APP.location, {
+						lng: feature.geometry.coordinates[0],
+						lat: feature.geometry.coordinates[1]
+					}, "events");
 				});
 			}
 		}).addTo(APP.maps.events);
 	}
 
-	function load_tfl(tfl){
+	function load_tfl(error,tfl){
 		if (!tfl.places){
 			return;
 		}
 		var t;
 		var myIcon;
+		var marker;
+		var data = [];
 		for (var i = tfl.places.length - 1; i >= 0; i--) {
 			t = tfl.places[i];
 			if(t.id == stop_details.id){
@@ -310,7 +376,11 @@ APP = (function () {
 						iconSize: [32, 32],
 						iconAnchor: [16, 16]
 					});
-					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(APP.maps.buses);
+					marker = L.marker([t.lat,t.lon], {icon: myIcon});
+					marker.on("click",click_tfl);
+					marker._tfl_data = t;
+					marker.addTo(APP.maps.buses);
+					data.push(t);
 					continue;
 				}
 			}
@@ -320,37 +390,74 @@ APP = (function () {
 						iconSize: [32, 32],
 						iconAnchor: [16, 16]
 					});
-					L.marker([t.lat,t.lon], {icon: myIcon}).addTo(APP.maps.buses);
+					L.marker([t.lat,t.lon], {icon: myIcon});
+					marker.on("click",click_tfl);
+					marker._tfl_data = t;
+					marker.addTo(APP.maps.buses);
+					data.push(t);
 					continue;
 			}
 		}
+		APP.data.tfl = data;
+		if(data.length){
+			route_to(APP.location, {
+				lat: data[0].lat,
+				lng: data[0].lon
+			}, "buses");
+		}
 	}
 
-	function route_to(start,end,map){
-		var control = L.Routing.control({
-			waypoints: [
+	function click_tfl(e){
+		var data = e.target._tfl_data;
+		var title = data.commonName + " " + data.indicator;
+		var lines = [];
+		for (var i = data.lines.length - 1; i >= 0; i--) {
+			lines.push(data.lines[i].name);
+		}
+		lines = lines.join(", ");
+
+		route_to(APP.location, e.latlng, "buses");
+	}
+
+
+
+	function route_to(start,end,map_id){
+		var mapbox_key = "pk.eyJ1IjoiYW5uYWJhbm5hbm5hIiwiYSI6ImNpbWdscW40bDAwMDgzNG0yZ2FxYTNhZ2YifQ.VmWzlEEOgWa4ydTmqfS06g";
+		var control;
+		if(APP.routers[map_id]){
+			control = APP.routers[map_id];
+			control.setWaypoints([
 				L.latLng(start),
 				L.latLng(end)
-			],
-			draggableWaypoints: false,
-			addWaypoints: false,
-			createMarker: function(i,w){
-				return blackDot(w.latLng);
-			},
-			autoRoute: false,
-			show: false,
-			fitSelectedRoutes: true, // enable auto-zoom
-			lineOptions: {
-				styles: [{color: 'black', opacity: 1, weight: 9}],
-				missingRouteStyles: [{color: 'black', opacity: 1, weight: 9}]
-			}
-		}).addTo(map);
+			]);
+		} else {
+			control = APP.routers[map_id] = L.Routing.control({
+				router: L.Routing.mapbox(mapbox_key,{profile:"mapbox.walking"}),
+				waypoints: [
+					L.latLng(start),
+					L.latLng(end)
+				],
+				draggableWaypoints: false,
+				addWaypoints: false,
+				createMarker: function(i,w){
+					return centerDot(w.latLng);
+				},
+				autoRoute: false,
+				show: false,
+				fitSelectedRoutes: false, // enable auto-zoom
+				lineOptions: {
+					styles: [{color: '#f44336', opacity: 1, weight: 9}],
+					missingRouteStyles: [{color: '#f44336', opacity: 1, weight: 9}]
+				}
+			});
+			APP.routers[map_id].addTo(APP.maps[map_id]);
+		}
 		control.route();
 	}
 
-	function blackDot(ll){
+	function centerDot(ll){
 		return L.circleMarker(ll, {
-			fillColor:"#000",
+			fillColor:"#f44336",
 			fillOpacity:1,
 			stroke: false,
 			radius: 12,
@@ -368,9 +475,9 @@ APP = (function () {
 		APP.maps.events = load_map('map_events',location);
 
 		var ll = L.latLng(location);
-		blackDot(ll).addTo(APP.maps.buses);
-		blackDot(ll).addTo(APP.maps.places);
-		blackDot(ll).addTo(APP.maps.events);
+		centerDot(ll).addTo(APP.maps.buses);
+		centerDot(ll).addTo(APP.maps.places);
+		centerDot(ll).addTo(APP.maps.events);
 
 		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe,restaurant,park,atm",load_places);
 		d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);

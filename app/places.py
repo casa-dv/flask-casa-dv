@@ -51,7 +51,7 @@ def get_place_details(id,key):
 	if "opening_hours" in place:
 		feature["properties"]["opening_hours"] = place["opening_hours"]["periods"]
 
-	for prop in ["name","place_id","formatted_phone_number","url","formatted_address","website","price","rating"]:
+	for prop in ["name","place_id","formatted_phone_number","url","formatted_address","website","price","rating","types"]:
 		if prop in place:
 			feature["properties"][prop] = place[prop]
 
