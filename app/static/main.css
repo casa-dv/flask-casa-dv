@@ -1,3 +1,10 @@
+/*
+blue   #18ffff
+red    #f44336
+yellow #ffff00
+black  #000
+white  #fff
+ */
 @font-face {
     font-family: 'bebas_neue';
     src: url('/static/fonts/bebasneue_bold-webfont.woff2') format('woff2'),
@@ -39,6 +46,10 @@
 html, body {
     font-family: 'merriweather', serif;
 }
+.text-content-wrap{
+    max-width: 30em;
+    margin: 0 auto;
+}
 h1,h2,h3,h4 {
     font-family: 'bebas_neue', sans-serif;
 }
@@ -74,13 +85,9 @@ h3{
         margin-top: 25px;
     }
 }
-/*
-blue   #18ffff
-red    #f44336
-yellow #ffff00
-black  #000
-white  #fff
- */
+.maps {
+    text-align: center;
+}
 .map-wrap{
     display: inline-block;
     width: 33.3333%;
@@ -104,8 +111,6 @@ white  #fff
     box-sizing: content-box;
 }
 .map-wrap.full-page {
-    float: none;
-    margin: 0 auto;
     width: 100%;
 }
 #map_buses .leaflet-tile-pane{
