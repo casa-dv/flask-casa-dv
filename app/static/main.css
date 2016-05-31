@@ -64,6 +64,16 @@ h3{
     display: inline-block;
     width: 20%;
 }
+@media screen and (min-width: 1400px) {
+    .stop-title{
+        position: absolute;
+        width: 100%;
+        top: 375px;
+    }
+    body {
+        margin-top: 25px;
+    }
+}
 /*
 blue   #18ffff
 red    #f44336
@@ -72,7 +82,7 @@ black  #000
 white  #fff
  */
 .map-wrap{
-    float: left;
+    display: inline-block;
     width: 33.3333%;
     padding: 0 20px; /* TODO media query to ensure max height of square map */
 }
@@ -143,8 +153,58 @@ white  #fff
     left: 0px;
     right: 0px;
     background: #fff;
-    padding: 30px 35px 50px;
-    overflow: hidden;
+    padding: 70px 45px 50px;
+}
+.timeline_label,
+.timeline_label_bottom{
+    position: absolute;
+    font-family: 'bebas_neue';
+    font-size: 1.75em;
+
+}
+.timeline_label_bottom{
+    left: -60px;
+    width: 120px;
+    text-align: center;
+}
+.timeline_label{
+    left: -35px;
+    top: -80px;
+    width: 90px;
+    background-repeat: no-repeat;
+    background-position: center right;
+    height: 48px;
+    line-height: 48px;
+}
+.timeline_label[data-weather="clear-day"]{
+    background-image: url("/static/icons/clear-day.png");
+}
+.timeline_label[data-weather="clear-night"]{
+    background-image: url("/static/icons/clear-night.png");
+}
+.timeline_label[data-weather="cloudy"]{
+    background-image: url("/static/icons/cloudy.png");
+}
+.timeline_label[data-weather="fog"]{
+    background-image: url("/static/icons/fog.png");
+}
+.timeline_label[data-weather="partly-cloudy-day"]{
+    background-image: url("/static/icons/partly-cloudy-day.png");
+}
+.timeline_label[data-weather="partly-cloudy-night"]{
+    background-image: url("/static/icons/partly-cloudy-night.png");
+}
+.timeline_label[data-weather="sleet"]{
+    background-image: url("/static/icons/sleet.png");
+}
+.timeline_label[data-weather="snow"]{
+    background-image: url("/static/icons/snow.png");
+}
+.timeline_label[data-weather="wind"]{
+    background-image: url("/static/icons/wind.png");
+}
+.timeline_label[data-weather="rain"]{
+    background-image: url("/static/icons/rain.png");
 }
 #timeline .noUi-handle {
     top: -35px;

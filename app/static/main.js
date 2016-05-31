@@ -6,7 +6,9 @@ APP = (function () {
 	var APP = {
 		maps: {},
 		routers: {},
-		data: {}
+		data: {},
+		layers: {},
+		activeLayers: {}
 	};
 	var autoplay = APP.autoplay = false;
 	var base_url;
@@ -18,8 +20,9 @@ APP = (function () {
 		base_url = "http://casa-dv.made-by-tom.co.uk";
 	}
 
-	var now = APP.now = moment().valueOf();
-	var then = APP.then = moment().add(7,'days').valueOf();
+	// round back to last hour
+	var now = APP.now = moment().valueOf() - (moment().valueOf() % (60*60*1000));
+	var then = APP.then = moment(now).add(7,'days').valueOf();
 	var radius = APP.radius = 300;
 
 	var location = APP.location = {
@@ -157,11 +160,33 @@ APP = (function () {
 				}
 			}
 		});
+		var label = document.createElement("div");
+		label.setAttribute("class","timeline_label");
+		var label_bottom = document.createElement("div");
+		label_bottom.setAttribute("class","timeline_label_bottom");
+		document.querySelector(".noUi-origin").appendChild(label);
+		document.querySelector(".noUi-origin").appendChild(label_bottom);
+
 		slider.noUiSlider.on('update', function( values, handle ) {
-			window.sliderTime = parse_slider_value(values);
+			var sliderTime = window.sliderTime = parse_slider_value(values);
+
+			// label Mon 12:05
+			var time = moment(sliderTime).format("ddd HH:mm");
+			document.querySelector(".timeline_label_bottom").textContent = time;
+
+			display_weather_data(sliderTime);
 			update_time_globals();
 		});
 		return slider;
+	}
+
+	function display_weather_data(time){
+		var weather = getWeatherAtTime(time);
+		if(weather){
+			var label = document.querySelector(".timeline_label");
+			label.innerHTML = Math.round(weather.temperature) + "&deg;C";
+			label.setAttribute("data-weather", weather.icon);
+		}
 	}
 
 	function parse_slider_value(values){
@@ -170,25 +195,26 @@ APP = (function () {
 
 	function load_weather(error,weather) {
 		APP.data.weather = weather;
+		display_weather_data(window.sliderTime);
 	}
 
 	function getWeatherAtTime(time){
-		//takes the time
+		var meteo = APP.data.weather;
 		if(meteo && meteo.hourly && meteo.hourly.data) {
 			// looks in the array of hourly data
 			var hourly = meteo.hourly.data;
 
-			var diff = time - slider.start;
+			var diff = time - APP.now;
 			var index = Math.floor(diff / 1000 / 60 / 60);
 			return hourly[index];
 		}
 	}
 
 	function load_plaques(error,plaques) {
-		if(!plaques.features){
+		if(!plaques || !plaques.features){
 			return;
 		}
-		L.geoJson(plaques,{
+		var layer = L.geoJson(plaques,{
 			pointToLayer: function(feature, latlng) {
 				var myIcon = L.icon({
 					iconUrl: "/static/icons/plaques.png",
@@ -208,11 +234,17 @@ APP = (function () {
 					}, "places");
 				});
 			}
-		}).addTo(APP.maps.places);
+		});
+
+		APP.data.plaques = plaques.features;
+		APP.layers.plaques = layer;
 	}
 
 	function load_wiki(error,wiki) {
-		L.geoJson(wiki,{
+		if(error || !wiki.features){
+			return;
+		}
+		var layer = L.geoJson(wiki,{
 			pointToLayer: function(feature, latlng) {
 				var myIcon = L.icon({
 					iconUrl: "/static/icons/wikipedia.png",
@@ -230,53 +262,52 @@ APP = (function () {
 					}, "places");
 				});
 			}
-		}).addTo(APP.maps.places);
+		});
 
-		route_to(
-			APP.location,
-			{
-				lng: wiki.features[0].geometry.coordinates[0],
-				lat: wiki.features[0].geometry.coordinates[1]
-			},
-			"places"
-		);
+		APP.data.wiki = wiki.features;
+		APP.layers.wiki = layer;
+
+		show_layer("wiki","places");
+		route_layer("wiki","places",0);
 	}
 
-	function load_places(error,places) {
-		if(!events.features){
+	function load_places_cafe(error,places) {
+		load_places_data(error,places,"cafe");
+	}
+	function load_places_restaurant(error,places) {
+		load_places_data(error,places,"restaurant");
+	}
+	function load_places_atm(error,places) {
+		load_places_data(error,places,"atm");
+	}
+	function load_places_park(error,places) {
+		load_places_data(error,places,"park");
+	}
+	function load_places_data(error,places,type){
+		if(error || !places){
 			return;
 		}
-		L.geoJson(events,{
+		var layer = get_place_layer(places);
+		var idx = "places_"+type;
+		APP.data[idx] = places;
+		APP.layers[idx] = layer;
+	}
+	function get_place_layer(places){
+		var layer = L.geoJson(places,{
 			pointToLayer: function(feature, latlng) {
-				var icon;
-				switch (feature.properties.category) {
-					case 'Business & Education':
-						icon = "education.png";
-						break;
-					case 'Culture & Art':
-						icon = "culture.png";
-						break;
-					case 'Fashion & Health':
-						icon = "beauty.png";
-						break;
-					case 'Food & Drink':
-						icon = "restaurant.png";
-						break;
-					case 'Melting Pot & Co':
-						icon = "melting-pot.png";
-						break;
-					case 'Sport & Travel':
-						icon = "sport.png";
-						break;
-					default:
-						icon = "melting-pot.png";
-						break;
+				if (_.contains(feature.properties.types, "cafe")){
+					icon = "coffee.png";
+				} else if (_.contains(feature.properties.types, "restaurant")){
+					icon = "restaurant.png";
+				} else if (_.contains(feature.properties.types, "atm")){
+					icon = "atm.png";
+				} else if (_.contains(feature.properties.types, "park")){
+					icon = "park.png";
+				} else {
+					return;
 				}
 				var myIcon = L.icon({
 					iconUrl: "/static/icons/"+icon,
-					// iconRetinaUrl: 'my-icon@2x.png',
-					// iconSize: [48, 48],
-					// iconAnchor: [24, 24]
 					iconSize: [32, 32],
 					iconAnchor: [16, 16]
 				});
@@ -288,27 +319,18 @@ APP = (function () {
 					route_to(APP.location, {
 						lng: feature.geometry.coordinates[0],
 						lat: feature.geometry.coordinates[1]
-					}, "events");
+					}, "places");
 				});
 			}
-		}).addTo(APP.maps.places);
-
-		APP.data.places = places.features;
-		route_to(
-			APP.location,
-			{
-				lng: places.features[0].geometry.coordinates[0],
-				lat: places.features[0].geometry.coordinates[1]
-			},
-			"places"
-		);
+		});
+		return layer;
 	}
 
 	function load_events(error,events) {
-		if(!events.features){
+		if(error || !events.features){
 			return;
 		}
-		L.geoJson(events,{
+		var layer = L.geoJson(events,{
 			pointToLayer: function(feature, latlng) {
 				var icon;
 				switch (feature.properties.category) {
@@ -336,9 +358,6 @@ APP = (function () {
 				}
 				var myIcon = L.icon({
 					iconUrl: "/static/icons/"+icon,
-					// iconRetinaUrl: 'my-icon@2x.png',
-					// iconSize: [48, 48],
-					// iconAnchor: [24, 24]
 					iconSize: [32, 32],
 					iconAnchor: [16, 16]
 				});
@@ -353,17 +372,26 @@ APP = (function () {
 					}, "events");
 				});
 			}
-		}).addTo(APP.maps.events);
+		});
+
+		APP.data.events = events.features;
+		APP.layers.events = layer;
+
+		show_layer("events","events");
+		route_layer("events","events",0);
 	}
 
 	function load_tfl(error,tfl){
-		if (!tfl.places){
+		if (error || !tfl.places){
 			return;
 		}
 		var t;
 		var myIcon;
 		var marker;
-		var data = [];
+		var bikesLayer = L.layerGroup();
+		var busesLayer = L.layerGroup();
+		var buses_data = [];
+		var bikes_data = [];
 		for (var i = tfl.places.length - 1; i >= 0; i--) {
 			t = tfl.places[i];
 			if(t.id == stop_details.id){
@@ -379,8 +407,8 @@ APP = (function () {
 					marker = L.marker([t.lat,t.lon], {icon: myIcon});
 					marker.on("click",click_tfl);
 					marker._tfl_data = t;
-					marker.addTo(APP.maps.buses);
-					data.push(t);
+					marker.addTo(busesLayer);
+					buses_data.push(t);
 					continue;
 				}
 			}
@@ -393,18 +421,18 @@ APP = (function () {
 					L.marker([t.lat,t.lon], {icon: myIcon});
 					marker.on("click",click_tfl);
 					marker._tfl_data = t;
-					marker.addTo(APP.maps.buses);
-					data.push(t);
+					marker.addTo(bikesLayer);
+					bikes_data.push(t);
 					continue;
 			}
 		}
-		APP.data.tfl = data;
-		if(data.length){
-			route_to(APP.location, {
-				lat: data[0].lat,
-				lng: data[0].lon
-			}, "buses");
-		}
+		APP.data.tfl_buses = buses_data;
+		APP.data.tfl_bikes = bikes_data;
+		APP.layers.tfl_bikes = bikesLayer;
+		APP.layers.tfl_buses = busesLayer;
+
+		show_layer("tfl_buses","buses");
+		route_layer("tfl_buses","buses",0);
 	}
 
 	function click_tfl(e){
@@ -418,8 +446,6 @@ APP = (function () {
 
 		route_to(APP.location, e.latlng, "buses");
 	}
-
-
 
 	function route_to(start,end,map_id){
 		var mapbox_key = "pk.eyJ1IjoiYW5uYWJhbm5hbm5hIiwiYSI6ImNpbWdscW40bDAwMDgzNG0yZ2FxYTNhZ2YifQ.VmWzlEEOgWa4ydTmqfS06g";
@@ -455,6 +481,28 @@ APP = (function () {
 		control.route();
 	}
 
+	function show_layer(layer_idx,map_idx){
+		var active = APP.activeLayers[map_idx];
+		if(active && active == layer_idx){
+			return;
+		}
+		if (active){
+			APP.maps[map_idx].removeLayer(APP.layers[active]);
+		}
+		APP.maps[map_idx].addLayer(APP.layers[layer_idx]);
+		APP.activeLayers[map_idx] = layer_idx;
+	}
+	APP.show_layer = show_layer;
+
+	function route_layer(layer_idx,map_idx,marker_idx){
+		var markers = APP.layers[layer_idx].getLayers();
+		if (marker_idx > markers.length - 1){
+			marker_idx = 0;
+		}
+		var end = markers[marker_idx].getLatLng();
+		route_to(APP.location, end, map_idx);
+	}
+
 	function centerDot(ll){
 		return L.circleMarker(ll, {
 			fillColor:"#f44336",
@@ -479,12 +527,17 @@ APP = (function () {
 		centerDot(ll).addTo(APP.maps.places);
 		centerDot(ll).addTo(APP.maps.events);
 
-		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe,restaurant,park,atm",load_places);
-		d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
-		d3.json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
-		d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
+		// d3.json(base_url + "/tfl/Place?lat="+location.lat+"&lon="+location.lng+"&radius="+radius,load_tfl);
 		d3.json(base_url+"/forecast?lat="+location.lat+"&lon="+location.lng,load_weather);
-		d3.json(base_url + "/tfl/Place?lat="+location.lat+"&lon="+location.lng+"&radius="+radius,load_tfl);
+		// d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
+
+		// load places (layers not yet added to map)
+		// d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
+		// d3.json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
+		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=cafe",load_places_cafe);
+		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=restaurant",load_places_restaurant);
+		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=park",load_places_park);
+		// d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=atm",load_places_atm);
 
 		var slider = document.getElementById('timeline');
 		create_timeline(slider);
