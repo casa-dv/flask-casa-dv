@@ -2,7 +2,7 @@
 <html>
 <head>
     <link rel='stylesheet' id='font-css'  href='http://fonts.googleapis.com/css?family=Roboto:400,300,100' type='text/css' media='all' />
-    <link rel='stylesheet' id='font-css'  href='./css/style.css' type='text/css' media='all' />    
+    <link rel='stylesheet' id='font-css'  href='./css/style.css' type='text/css' media='all' />
     <script type='text/javascript' src='http://code.jquery.com/jquery-1.10.2.min.js?ver=1.10.2'></script>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgo0C-bUIQ1276K8gt-DaikKwoYd_Ay_M&libraries=places"></script>
     <script type='text/javascript' src='http://arshaw.com/xdate/downloads/0.8/xdate.js'></script>
@@ -48,7 +48,7 @@
          ExtraWidthY: 100,
          color: d3.scale.category10()
         };
-        
+
         if('undefined' !== typeof options){
           for(var i in options){
             if('undefined' !== typeof options[i]){
@@ -62,7 +62,7 @@
         var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
         var Format = d3.format('%');
         d3.select(id).select("svg").remove();
-        
+
         var g = d3.select(id)
                 .append("svg")
                 .attr("width", cfg.w+cfg.ExtraWidthX)
@@ -101,13 +101,13 @@
             .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total);})
             .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total);});
 
-     
+
         d.forEach(function(y, x){
           dataValues = [];
           g.selectAll(".nodes")
             .data(y, function(j, i){
               dataValues.push([
-                cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+                cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)),
                 cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
               ]);
             });
@@ -132,7 +132,7 @@
                                             z = "polygon."+d3.select(this).attr("class");
                                             g.selectAll("polygon")
                                              .transition(200)
-                                             .style("fill-opacity", 0.1); 
+                                             .style("fill-opacity", 0.1);
                                             g.selectAll(z)
                                              .transition(200)
                                              .style("fill-opacity", .7);
@@ -156,7 +156,7 @@
             .attr("alt", function(j){return Math.max(j.value, 0)})
             .attr("cx", function(j, i){
               dataValues.push([
-                cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+                cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)),
                 cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
             ]);
             return cfg.w/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total));
@@ -169,18 +169,18 @@
             .on('mouseover', function (d){
                         newX =  parseFloat(d3.select(this).attr('cx')) - 10;
                         newY =  parseFloat(d3.select(this).attr('cy')) - 5;
-                        
+
                         tooltip
                             .attr('x', newX)
                             .attr('y', newY)
                             .text(Format(d.value))
                             .transition(200)
                             .style('opacity', 1);
-                            
+
                         z = "polygon."+d3.select(this).attr("class");
                         g.selectAll("polygon")
                             .transition(200)
-                            .style("fill-opacity", 0.1); 
+                            .style("fill-opacity", 0.1);
                         g.selectAll(z)
                             .transition(200)
                             .style("fill-opacity", .7);
@@ -228,6 +228,7 @@
             icon: "./img/icon.png"
         });
         directionsDisplay.setMap(map);
+        cafes();
     }
 
     function load_markers(type) {
@@ -292,7 +293,7 @@
 
                 service.getDetails(request2,function(results){
                     var number;
-                    if (results && results.formatted_phone_number){number = results.formatted_phone_number;} 
+                    if (results && results.formatted_phone_number){number = results.formatted_phone_number;}
                     else {number = "";}
                     document.getElementById("place_number").innerHTML = number;
                     var website;
@@ -357,7 +358,7 @@
 
         document.getElementById("titleHeader").innerHTML =  type+"s at a walking distance";
     }
-        
+
     function cafes(){
         load_markers("cafe")
     }
@@ -371,7 +372,7 @@
     </script>
 
 </head>
-    
+
 <body>
 <div id="background"><img src = "./img/sfondo.png"></div>
 <div id="titleHeader">Places around this bus stop</div>
@@ -379,11 +380,10 @@
 <div id="place_name"></div>
 <div id="place_number"></div>
 <div id="place_address"></div>
-<div id="place_website"></div> 
+<div id="place_website"></div>
 <div id="place_distance"></div>
 <div id="place_price_level"></div>
 <div id="place_rating"></div>
-<div id="place_reviews_background"></div>
 <div id="place_reviews"></div>
 <div id="place_photos"></div>
 <div style="top:39%; left:7%; height: 2%; width: 30%; background: #ccc;">
@@ -396,7 +396,7 @@ RadarChart.draw("#chart", d, mycfg);
 </div>
 <div id="buttons">
     <button class="" type="button" onclick="cafes()"><img src = "./img/button_cafe.png" border-radius="50%"></button>
-    <button type="button" onclick="restaurants()"><img src = "./img/button_restaurant.png" border-radius="50%"></button>  
+    <button type="button" onclick="restaurants()"><img src = "./img/button_restaurant.png" border-radius="50%"></button>
 </div>
 </body>
 </html>
