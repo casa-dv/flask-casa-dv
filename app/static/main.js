@@ -222,7 +222,7 @@ APP = (function () {
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
 					var props = feature.properties;
-					document.querySelector(".place_title").textContent = props.inscription;
+					show_plaques_data(feature);
 					route_to(APP.location, {
 						lng: feature.geometry.coordinates[0],
 						lat: feature.geometry.coordinates[1]
@@ -233,6 +233,18 @@ APP = (function () {
 
 		APP.data.plaques = plaques.features;
 		APP.layers.plaques = layer;
+	}
+	function show_plaques_data(data){
+		if(!data.properties){
+			return;
+		}
+		var props = data.properties;
+		var title = props.lead_subject_name;
+		var sub = "Plaque";
+		var desc = props.inscription;
+		document.querySelector("#details_places .title").textContent = title;
+		document.querySelector("#details_places .subhead").textContent = sub;
+		document.querySelector("#details_places .description").textContent = desc;
 	}
 
 	function load_wiki(error,wiki) {
@@ -263,9 +275,9 @@ APP = (function () {
 		APP.data.wiki = wiki.features;
 		APP.layers.wiki = layer;
 
-		show_layer("wiki","places");
-		route_layer("wiki","places",0);
-		show_wiki_data(wiki.features[0]);
+		// show_layer("wiki","places");
+		// route_layer("wiki","places",0);
+		// show_wiki_data(wiki.features[0]);
 	}
 
 	function show_wiki_data(data){
@@ -299,6 +311,9 @@ APP = (function () {
 
 	function load_places_cafe(error,places) {
 		load_places_data(error,places,"cafe");
+		show_layer("places_cafe","places");
+		route_layer("places_cafe","places",0);
+		show_places_data(APP.data.places_cafe[0], "Cafe");
 	}
 	function load_places_restaurant(error,places) {
 		load_places_data(error,places,"restaurant");
@@ -313,12 +328,12 @@ APP = (function () {
 		if(error || !places){
 			return;
 		}
-		var layer = get_place_layer(places);
+		var layer = get_place_layer(places,type);
 		var idx = "places_"+type;
 		APP.data[idx] = places;
 		APP.layers[idx] = layer;
 	}
-	function get_place_layer(places){
+	function get_place_layer(places,type){
 		var layer = L.geoJson(places,{
 			pointToLayer: function(feature, latlng) {
 				if (_.contains(feature.properties.types, "cafe")){
@@ -342,6 +357,7 @@ APP = (function () {
 			},
 			onEachFeature: function (feature, layer) {
 				layer.on("click",function(){
+					show_places_data(feature,type);
 					route_to(APP.location, {
 						lng: feature.geometry.coordinates[0],
 						lat: feature.geometry.coordinates[1]
@@ -351,39 +367,51 @@ APP = (function () {
 		});
 		return layer;
 	}
+	function show_places_data(data,type){
+		if (!data.properties){
+			return;
+		}
+		var props = data.properties;
+		var title = props.name;
+		var sub = type;
+
+		var desc = [
+			"<p>Price: ",
+			props.price,
+			", Rating: ",
+			props.rating,
+			"</p><p>",
+			"<a href=\"",
+			props.url,
+			"\" target=\"_blank\">Find out more on Google</a>",
+			"</p>"
+		].join("");
+
+		document.querySelector("#details_places .title").textContent = title;
+		document.querySelector("#details_places .subhead").textContent = sub;
+		document.querySelector("#details_places .description").innerHTML = desc;
+	}
+
 
 	function load_events(error,events) {
 		if(error || !events.features){
 			return;
 		}
+		var layer = get_events_layer(events);
+
+		APP.data.events = events.features;
+		APP.layers.events = layer;
+
+		show_layer("events","events");
+		event_type_change(); // trigger filter
+
+	}
+	function get_events_layer(events){
 		var layer = L.geoJson(events,{
 			pointToLayer: function(feature, latlng) {
-				var icon;
-				switch (feature.properties.category) {
-					case 'Business & Education':
-						icon = "education.png";
-						break;
-					case 'Culture & Art':
-						icon = "culture.png";
-						break;
-					case 'Fashion & Health':
-						icon = "beauty.png";
-						break;
-					case 'Food & Drink':
-						icon = "restaurant.png";
-						break;
-					case 'Melting Pot & Co':
-						icon = "melting-pot.png";
-						break;
-					case 'Sport & Travel':
-						icon = "sport.png";
-						break;
-					default:
-						icon = "melting-pot.png";
-						break;
-				}
+				var icon = event_name_to_tag(feature.properties.category);
 				var myIcon = L.icon({
-					iconUrl: "/static/icons/"+icon,
+					iconUrl: "/static/icons/"+icon+".png",
 					iconSize: [32, 32],
 					iconAnchor: [16, 16]
 				});
@@ -400,13 +428,7 @@ APP = (function () {
 				});
 			}
 		});
-
-		APP.data.events = events.features;
-		APP.layers.events = layer;
-
-		show_layer("events","events");
-		route_layer("events","events",0);
-		show_event_data(events.features[0]);
+		return layer;
 	}
 
 	function show_event_data(data){
@@ -442,6 +464,11 @@ APP = (function () {
 		document.querySelector("#details_events .title").innerHTML = title;
 		document.querySelector("#details_events .subhead").textContent = sub;
 		document.querySelector("#details_events .description").innerHTML = desc;
+	}
+	function show_event_not_found(cat_name){
+		document.querySelector("#details_events .title").textContent = "None found";
+		document.querySelector("#details_events .subhead").textContent = cat_name;
+		document.querySelector("#details_events .description").innerHTML = "";
 	}
 
 	function load_tfl(error,tfl){
@@ -507,7 +534,7 @@ APP = (function () {
 
 		if (data.placeType == "StopPoint"){
 			title = data.commonName;
-			sub = "Bus Stop";
+			sub = "Nearby Bus Stop";
 			if(data.indicator){
 				title += " " + data.indicator;
 			}
@@ -559,7 +586,7 @@ APP = (function () {
 				draggableWaypoints: false,
 				addWaypoints: false,
 				createMarker: function(i,w){
-					return centerDot(w.latLng);
+					return false; //centerDot(w.latLng);
 				},
 				autoRoute: false,
 				show: false,
@@ -585,15 +612,44 @@ APP = (function () {
 		APP.maps[map_idx].addLayer(APP.layers[layer_idx]);
 		APP.activeLayers[map_idx] = layer_idx;
 	}
-	APP.show_layer = show_layer;
 
 	function route_layer(layer_idx,map_idx,marker_idx){
+		if(!APP.layers[layer_idx]){
+			return;
+		}
 		var markers = APP.layers[layer_idx].getLayers();
+		if(!markers || !markers.length){
+			return;
+		}
+
 		if (marker_idx > markers.length - 1){
 			marker_idx = 0;
 		}
 		var end = markers[marker_idx].getLatLng();
 		route_to(APP.location, end, map_idx);
+	}
+
+	function filter_layer(layer_idx,map_idx,test_cb){
+		if(!APP.layers[layer_idx]){
+			return;
+		}
+		var markers = APP.layers[layer_idx].getLayers();
+		if(!markers || !markers.length){
+			return;
+		}
+		// hide all
+		_.each(markers,function(marker){
+			marker._icon.classList.add("hide");
+		});
+
+		// filter
+		var filtered = _.filter(markers,test_cb);
+
+		// show filtered
+		_.each(filtered,function(marker){
+			marker._icon.classList.remove("hide");
+		});
+		return filtered;
 	}
 
 	function centerDot(ll){
@@ -604,6 +660,104 @@ APP = (function () {
 			radius: 7,
 			clickable: false
 		});
+	}
+
+	function place_type_change(){
+		var el = document.querySelector("#details_places input:checked");
+		var lookup = {
+			"places-coffee":     "places_cafe",
+			"places-restaurant": "places_restaurant",
+			"places-park":       "places_park",
+			"places-atm":        "places_atm",
+			"places-wikipedia":  "wiki",
+			"places-plaques":    "plaques",
+		};
+		var layer_idx = lookup[el.id];
+		if(layer_idx){
+			show_layer(layer_idx,"places");
+			route_layer(layer_idx,"places",0);
+			if (layer_idx.match("places")){
+				var type = layer_idx.split("_")[1];
+				show_places_data(APP.data[layer_idx][0], type);
+			} else if (layer_idx == "wiki"){
+				show_wiki_data(APP.data.wiki[0]);
+			} else if (layer_idx == "plaques"){
+				show_plaques_data(APP.data.plaques[0]);
+			}
+		}
+	}
+	function event_type_change(){
+		var el = document.querySelector("#details_events input:checked");
+		var cat = el.id.split("-")[1];
+		var cat_name = event_tag_to_name(cat);
+		filter_events_by_category(cat_name);
+	}
+	function filter_events_by_category(cat_name){
+		var filtered_markers = filter_layer("events","events",function(marker){
+			return marker.feature.properties.category === cat_name;
+		});
+
+		if(filtered_markers && filtered_markers.length){
+			route_to(APP.location, filtered_markers[0].getLatLng(), "events");
+			show_event_data(filtered_markers[0].feature);
+		} else {
+			show_event_not_found(cat_name);
+			route_to(APP.location, APP.location, "events");
+		}
+	}
+	function event_name_to_tag(name){
+		var icon;
+		switch (name) {
+			case 'Business & Education':
+				icon = "education";
+				break;
+			case 'Culture & Art':
+				icon = "culture";
+				break;
+			case 'Fashion & Health':
+				icon = "beauty";
+				break;
+			case 'Food & Drink':
+				icon = "restaurant";
+				break;
+			case 'Melting Pot & Co':
+				icon = "melting-pot";
+				break;
+			case 'Sport & Travel':
+				icon = "sport";
+				break;
+			default:
+				icon = "melting-pot";
+				break;
+		}
+		return icon;
+	}
+	function event_tag_to_name(tag){
+		var name;
+		switch (tag) {
+			case "education":
+				name = 'Business & Education';
+				break;
+			case "culture":
+				name = 'Culture & Art';
+				break;
+			case "beauty":
+				name = 'Fashion & Health';
+				break;
+			case "restaurant":
+				name = 'Food & Drink';
+				break;
+			case "melting-pot":
+				name = 'Melting Pot & Co';
+				break;
+			case "sport":
+				name = 'Sport & Travel';
+				break;
+			default:
+				name = "Melting Pot & Co";
+				break;
+		}
+		return name;
 	}
 
 	function draw(){
@@ -641,6 +795,8 @@ APP = (function () {
 		if(autoplay){
 			window.requestAnimationFrame(draw);
 		}
+		document.querySelector("#details_places form").addEventListener("change",place_type_change);
+		document.querySelector("#details_events form").addEventListener("change",event_type_change);
 	}
 
 	setup();

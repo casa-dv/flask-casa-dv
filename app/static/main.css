@@ -312,6 +312,13 @@ label[for="events-sport"] {
     background: #000;
     height: 5px;
 }
-.maps .leaflet-routing-container {
+.template-stop .leaflet-routing-container {
+    display: none;
+}
+.template-stop .leaflet-overlay-pane {
+/*    z-index: 8;
+    pointer-events: none;
+*/}
+.hide {
     display: none;
 }
