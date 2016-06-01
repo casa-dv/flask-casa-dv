@@ -58,6 +58,19 @@ def stop(stop_id):
 	# return json_response(json.dumps(details))
 	return render_template("stop.html",data=details)
 
+@app.route("/stops/<stop_id>/streetview")
+def streetview(stop_id):
+	details_r = tfl_request({},"StopPoint/"+stop_id)
+	details = json.loads(details_r["text"])
+
+	details = parse_stop(details,stop_id)
+
+	if details is None or ("httpStatusCode" in details and details["httpStatusCode"] == 404) or "id" not in details:
+		return make_response("Stop not found. Try <a href=\"/stops/490015764C/streetview\">Covent Garden / Catherine Street</a>", 400)
+
+	# return json_response(json.dumps(details))
+	return render_template("streetview.html",data=details)
+
 def parse_stop(stop,stop_id):
 	if type(stop) is not dict:
 		return None

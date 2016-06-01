@@ -1,0 +1,18 @@
+<!doctype html>
+<head>
+    <title>Streetview Photomontage | {{data.commonName}}</title>
+    <meta charset="utf-8">
+    <link href="/static/streetview.css" rel="stylesheet">
+</head>
+<body>
+	<ul id="map"></ul>
+	<h1>{{data.commonName}}</h1>
+	<script>
+	stop_details = {
+		id: "{{data.id}}",
+		lat: {{data.lat}},
+		lng: {{data.lon}}
+	}
+	</script>
+	<script type="text/javascript" src="/static/streetview.js"></script>
+</body>

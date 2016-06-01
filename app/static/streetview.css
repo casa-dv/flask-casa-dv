@@ -1,0 +1,38 @@
+@font-face {
+    font-family: 'bebas_neue';
+    src: url('/static/fonts/bebasneue_bold-webfont.woff2') format('woff2'),
+         url('/static/fonts/bebasneue_bold-webfont.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+h1{
+    font-family: 'bebas_neue', sans-serif;
+    text-align: center;
+    color: #ddd;
+    font-size: 5em;
+    margin: -0.2em 0 0;
+}
+html, body {
+    margin: 0;
+}
+ul, li {
+    margin: 10px;
+}
+ul {
+    padding: 0;
+    list-style: none;
+    width: 660px;
+    margin: 20px auto;
+    overflow: hidden;
+}
+li {
+    height: 200px;
+    width: 200px;
+    overflow: hidden;
+    display: block;
+    float: left;
+}
+img {
+    display: block;
+    margin: 0;
+}
