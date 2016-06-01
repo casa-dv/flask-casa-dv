@@ -47,29 +47,31 @@ def stops():
 
 @app.route("/stops/<stop_id>")
 def stop(stop_id):
-	details_r = tfl_request({},"StopPoint/"+stop_id)
-	details = json.loads(details_r["text"])
-
-	details = parse_stop(details,stop_id)
-
-	if details is None or ("httpStatusCode" in details and details["httpStatusCode"] == 404) or "id" not in details:
-		return make_response("Stop not found. Try <a href=\"/stops/490015764C\">Covent Garden / Catherine Street</a>", 400)
-
-	# return json_response(json.dumps(details))
-	return render_template("stop.html",data=details)
+	return render_stop_template(stop_id,"stop.html","")
 
 @app.route("/stops/<stop_id>/streetview")
 def streetview(stop_id):
+	return render_stop_template(stop_id,"streetview.html","/streetview")
+
+@app.route("/stops/<stop_id>/places")
+def stop_places(stop_id):
+	return render_stop_template(stop_id,"stop-places.html","/places")
+
+def render_stop_template(stop_id,template,extra_path):
 	details_r = tfl_request({},"StopPoint/"+stop_id)
 	details = json.loads(details_r["text"])
 
 	details = parse_stop(details,stop_id)
+	# details = {
+	# 	"id":"490000089A",
+	# 	"lat": 51,
+	# 	"lon":-0.1
+	# }
 
 	if details is None or ("httpStatusCode" in details and details["httpStatusCode"] == 404) or "id" not in details:
-		return make_response("Stop not found. Try <a href=\"/stops/490015764C/streetview\">Covent Garden / Catherine Street</a>", 400)
+		return make_response("Stop not found. Try <a href=\"/stops/490015764C"+extra_path+"\">Covent Garden / Catherine Street</a>", 400)
 
-	# return json_response(json.dumps(details))
-	return render_template("streetview.html",data=details)
+	return render_template(template,data=details)
 
 def parse_stop(stop,stop_id):
 	if type(stop) is not dict:

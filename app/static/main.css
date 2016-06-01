@@ -175,6 +175,43 @@ label[for="events-sport"] {
     text-align: center;
     margin: 0 10px;
 }
+html {
+    height: 100%;
+}
+.template-places {
+    margin:0;
+    padding:0;
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    overflow: hidden;
+}
+.template-places .maps {
+    order: 1;
+    margin:0;
+    flex: 1 100%;
+    position: relative;
+}
+.template-places .map-wrap{
+    width: 100%;
+}
+.template-places .map-inner-wrap{
+    max-width: 40em;
+}
+.template-places .details_wrap  {
+    order: 2;
+    max-width: 23em;
+    flex: 1 auto;
+    overflow-y: scroll;
+    background: #eee;
+}
+.template-places .details {
+    width: 100%;
+}
+.template-places .timeline-wrap {
+    position: absolute;
+    bottom: 0;
+}
 .details,
 .map-wrap{
     display: inline-block;

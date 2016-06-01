@@ -31,6 +31,8 @@ APP = (function () {
 		base_url = "http://casa-dv.made-by-tom.co.uk";
 	}
 
+	var is_places_details_page = !!url.match("/places");
+
 	// round back to last hour
 	var now = APP.now = Math.round(moment().valueOf() / (60*60*1000)) * 60*60*1000;
 	var then = APP.then = moment(now).add(7,'days').valueOf();
@@ -809,19 +811,27 @@ APP = (function () {
 	}
 
 	function setup(){
-		APP.maps.buses = load_map('map_buses',location);
+		if(!is_places_details_page){
+			APP.maps.buses = load_map('map_buses',location);
+			APP.maps.events = load_map('map_events',location);
+		}
 		APP.maps.places = load_map('map_places',location);
-		APP.maps.events = load_map('map_events',location);
 
 		var ll = L.latLng(location);
-		centerDot(ll).addTo(APP.maps.buses);
+		if(!is_places_details_page){
+			centerDot(ll).addTo(APP.maps.buses);
+			centerDot(ll).addTo(APP.maps.events);
+		}
 		centerDot(ll).addTo(APP.maps.places);
-		centerDot(ll).addTo(APP.maps.events);
 
-		d3.json(base_url + "/tfl/Place?lat="+location.lat+"&lon="+location.lng+"&radius="+radius,load_tfl);
+		// load weather
 		d3.json(base_url+"/forecast?lat="+location.lat+"&lon="+location.lng,load_weather);
-		d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
 
+		// load tfl nearby, and events
+		if(!is_places_details_page){
+			d3.json(base_url + "/tfl/Place?lat="+location.lat+"&lon="+location.lng+"&radius="+radius,load_tfl);
+			d3.json(base_url+"/eventbrite?lat="+location.lat+"&lon="+location.lng,load_events);
+		}
 		// load places (layers not yet added to map)
 		d3.json(base_url+"/plaques?lat="+location.lat+"&lon="+location.lng,load_plaques);
 		d3.json(base_url+"/dbpedia?lat="+location.lat+"&lon="+location.lng,load_wiki);
