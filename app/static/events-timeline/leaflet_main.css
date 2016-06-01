@@ -10,6 +10,7 @@ h1{
     text-align: center;
     color: #ddd;
     font-size: 5em;
+    margin: -0.2em 0 0;
 }
 html, body {
 	height: 90%;
@@ -23,4 +24,43 @@ html, body {
 }
 .leaflet-tile-pane{
 	opacity: 0.5;
+}
+.label_wrap{
+    line-height: 48px;
+}
+.timeline_label{
+	display: inline-block;
+    background-repeat: no-repeat;
+    background-position: center left;
+    padding-left: 56px;
+}
+.timeline_label[data-weather="clear-day"]{
+    background-image: url("/static/icons/clear-day.png");
+}
+.timeline_label[data-weather="clear-night"]{
+    background-image: url("/static/icons/clear-night.png");
+}
+.timeline_label[data-weather="cloudy"]{
+    background-image: url("/static/icons/cloudy.png");
+}
+.timeline_label[data-weather="fog"]{
+    background-image: url("/static/icons/fog.png");
+}
+.timeline_label[data-weather="partly-cloudy-day"]{
+    background-image: url("/static/icons/partly-cloudy-day.png");
+}
+.timeline_label[data-weather="partly-cloudy-night"]{
+    background-image: url("/static/icons/partly-cloudy-night.png");
+}
+.timeline_label[data-weather="sleet"]{
+    background-image: url("/static/icons/sleet.png");
+}
+.timeline_label[data-weather="snow"]{
+    background-image: url("/static/icons/snow.png");
+}
+.timeline_label[data-weather="wind"]{
+    background-image: url("/static/icons/wind.png");
+}
+.timeline_label[data-weather="rain"]{
+    background-image: url("/static/icons/rain.png");
 }
