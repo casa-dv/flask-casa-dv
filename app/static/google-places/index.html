@@ -3,21 +3,28 @@
 <head>
     <link rel='stylesheet' id='font-css'  href='http://fonts.googleapis.com/css?family=Roboto:400,300,100' type='text/css' media='all' />
     <link rel='stylesheet' id='font-css'  href='./css/style.css' type='text/css' media='all' />
-    <script type='text/javascript' src='http://code.jquery.com/jquery-1.10.2.min.js?ver=1.10.2'></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <!-- <script type='text/javascript' src='http://code.jquery.com/jquery-1.10.2.min.js?ver=1.10.2'></script>
+
+    <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>-->
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgo0C-bUIQ1276K8gt-DaikKwoYd_Ay_M&libraries=places"></script>
     <script type='text/javascript' src='http://arshaw.com/xdate/downloads/0.8/xdate.js'></script>
     <script type='text/javascript' src='./js/mapStyle.js'></script>
     <script type='text/javascript' src='./js/tripadvisor.js'></script>
     <script src='http://d3js.org/d3.v3.min.js'></script>
-    <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-
     <script type="text/javascript">
+
     var map;
     var prices=[];
     var ratings=[];
     var names=[];
     var distances=[];
     var photos=[];
+    var valuesd = [2];
+    var valuesp = [2];
+    var valuesr = [2];
     for (var i=0; i<tripadvisor_cafe.length; i++){
         var cafe = tripadvisor_cafe[i];
     }
@@ -26,7 +33,51 @@
         ratings.push(cafe[i].rating);
         names.push(cafe[i].name);
     }
-    var d = [[{axis:"Distance",value:1},{axis:"Price",value:2},{axis:"Rating",value:5}]];
+
+
+
+$(function() {
+    $( "#master01" ).slider({
+      value: 2,
+      orientation: "horizontal",
+        range: "min",
+        max: 5,
+        min:0,
+        animate: true,
+        stop : function(event, ui) {
+        var value1 = $(this).slider( "value");
+        valuesd.push(value1);
+        },
+    });
+     $( "#master02" ).slider({
+      value: 2,
+      orientation: "horizontal",
+      range: "min",
+        max: 5,
+        min:0,
+      animate: true,
+        stop : function(event, ui) {
+        var value2 = $(this).slider( "value");
+        valuesp.push(value2);
+        },
+    });
+    $( "#master03" ).slider({
+      value: 2,
+      orientation: "horizontal",
+      range: "min",
+        max: 5,
+        min:0,
+      animate: true,
+        stop : function(event, ui) {
+        var value3 = $(this).slider( "value");
+        valuesr.push(value3);
+        },
+    });
+});
+
+
+    var d = [[{axis:"Distance",value:valuesd[valuesd.length-1]},{axis:"Price",value:valuesp[valuesp.length-1]},{axis:"Rating",value:valuesr[valuesr.length-1]}]];
+
 
     var mycfg = {w: 300,h: 300,maxValue: 5,ExtraWidthX: 300}
 
@@ -69,7 +120,7 @@
                 .attr("height", cfg.h+cfg.ExtraWidthY)
                 .append("g")
                 .attr("transform", "translate(" + cfg.TranslateX + "," + cfg.TranslateY + ")");
-                ;
+
 
         var tooltip;
 
@@ -204,34 +255,13 @@
                    .style('font-family', 'sans-serif')
                    .style('font-size', '13px');
       }
-    };
-
-    var num=0;
-    var ratings=[];
-    function initialize() {
-        var location = new google.maps.LatLng(51.511732, -0.123270);
-        var directionsDisplay = new google.maps.DirectionsRenderer();
-        var map = new google.maps.Map(document.getElementById("map-canvas"), {
-            center: location,
-            zoom: 17,
-            minZoom: 17,
-            maxZoom: 17,
-            styles: greyMap,
-            streetViewControl:false,
-            zoomControl:false,
-            mapTypeControl:false,
-            draggable:false
-            });
-        var marker = new google.maps.Marker({
-            map: map,
-            position: location,
-            icon: "./img/icon.png"
-        });
-        directionsDisplay.setMap(map);
-        cafes();
     }
 
+
+
+
     function load_markers(type) {
+         var d = [[{axis:"Distance",value:valuesd[valuesd.length-1]},{axis:"Price",value:valuesp[valuesp.length-1]},{axis:"Rating",value:valuesr[valuesr.length-1]}]];
         RadarChart.draw("#chart", d, mycfg);
         var directionsDisplay = new google.maps.DirectionsRenderer({suppressMarkers:true,preserveViewport:true})
         var location = new google.maps.LatLng(51.511732, -0.123270);
@@ -303,21 +333,22 @@
                     var price_level;
                     if (results && results.price_level){price_level = results.price_level;}
                     else {price_level = prices[names.indexOf(results.name)]}
-                    document.getElementById("place_price_level").innerHTML = price_level;
+                    document.getElementById("place_price_level").innerHTML = "Price level: " + price_level;
                     var rating;
                     if (results && results.rating){rating = results.rating;}
                     else {rating = ratings[names.indexOf(results.name)];}
                     ratings.push(rating);
-                    document.getElementById("place_rating").innerHTML = rating;
+                    document.getElementById("place_rating").innerHTML = "Rating: " + rating;
                     var reviews;
                     if (results && results.reviews){reviews=results.reviews[0].text;}
                     else {reviews="";}
                     document.getElementById("place_reviews").innerHTML = reviews;
                     if(results.photos && results.photos.length){
                     document.getElementById("place_photos").innerHTML = results.photos[0].html_attributions;
+
                     }
                     place_reviews.onclick = function() {if(num<results.reviews.length-1){num=num+1; document.getElementById("place_reviews").innerHTML = results.reviews[num].text}else{num=0;document.getElementById("place_reviews").innerHTML = results.reviews[num].text}};
-                    var d = [[{axis:"Distance",value:1},{axis:"Price",value:2},{axis:"Rating",value:5}],
+                    var d = [[{axis:"Distance",value:valuesd[valuesd.length-1]},{axis:"Price",value:valuesp[valuesp.length-1]},{axis:"Rating",value:valuesr[valuesr.length-1]}],
                             [{axis:"Distance",value:distances[distances.length-1]},{axis:"Price",value:price_level},{axis:"Rating",value:rating}]];
                     RadarChart.draw("#chart", d, mycfg);
                 });
@@ -336,7 +367,7 @@
                             }
                         }
                     }
-                document.getElementById("place_distance").innerHTML = duration;
+                document.getElementById("place_distance").innerHTML = "Walking distance: " + duration;
                 });
                 directionsService.route(request3, function(response,status){
                     if (status == google.maps.DirectionsStatus.OK) {
@@ -359,24 +390,56 @@
         document.getElementById("titleHeader").innerHTML =  type+"s at a walking distance";
     }
 
+
+    var num=0;
+    var ratings=[];
+    function initialize() {
+        var location = new google.maps.LatLng(51.511732, -0.123270);
+        var directionsDisplay = new google.maps.DirectionsRenderer();
+        var map = new google.maps.Map(document.getElementById("map-canvas"), {
+            center: location,
+            zoom: 17,
+            minZoom: 17,
+            maxZoom: 17,
+            styles: greyMap,
+            streetViewControl:false,
+            zoomControl:false,
+            mapTypeControl:false,
+            draggable:false
+            });
+        var marker = new google.maps.Marker({
+            map: map,
+            position: location,
+            icon: "./img/icon.png"
+        });
+        directionsDisplay.setMap(map);
+    }
+
     function cafes(){
-        load_markers("cafe")
+        load_markers("cafe");
+        console.log(valuesd);
+        console.log(valuesp);
+        console.log(valuesr);
+        console.log(d);
     }
     function restaurants() {
         load_markers("restaurant")
     }
-
-
-    // Run the functions when the window has finished loading.
+            // Run the functions when the window has finished loading.
     google.maps.event.addDomListener(window, 'load', initialize)
+
+
     </script>
 
 </head>
 
 <body>
 <div id="background"><img src = "./img/sfondo.png"></div>
-<div id="titleHeader">Places around this bus stop</div>
+
 <div id="map-canvas"></div>
+<div id="titleHeader">Places around this bus stop</div>
+<div id="button-description"> choose your option...</div>
+<div id="button-description" style="padding-top:100px;"> ...and pick a place on map </div>
 <div id="place_name"></div>
 <div id="place_number"></div>
 <div id="place_address"></div>
@@ -384,19 +447,34 @@
 <div id="place_distance"></div>
 <div id="place_price_level"></div>
 <div id="place_rating"></div>
+<div id="place_reviews_background"></div>
 <div id="place_reviews"></div>
 <div id="place_photos"></div>
-<div style="top:39%; left:7%; height: 2%; width: 30%; background: #ccc;">
+<!--<div style="top:39%; left:7%; height: 2%; width: 30%; background: #ccc;">
     <div style="top:39%; left:7%; height: 2%; width: rating[i]*20%; background: #000;"></div>
-</div>
+</div>-->
+
 <div id="chart"></div>
-RadarChart.draw("#chart", d, mycfg);
-<div id="buttonsreviews">
+<!--<div id="buttonsreviews">
     <button class="buttonreviews squarebutton" type="button"></button>
-</div>
+</div>-->
+
 <div id="buttons">
     <button class="" type="button" onclick="cafes()"><img src = "./img/button_cafe.png" border-radius="50%"></button>
+</div>
+<div id="buttons2">
     <button type="button" onclick="restaurants()"><img src = "./img/button_restaurant.png" border-radius="50%"></button>
 </div>
+<div id="sliderheader" ><p>set your preferences..</p></div>
+<div id="sliderheader" style="padding-top:40px;font-size:10px;" ><p>distance</p></div>
+<div id="master01"></div>
+<div id="sliderheader" style="padding-top:80px;font-size:10px;" ><p>price</p></div>
+<div id="master02"></div>
+<div id="sliderheader" style="padding-top:120px;font-size:10px;" ><p>rating</p></div>
+<div id="master03"></div>
+<div id="sliderheader" style="padding-top:160px;" ><p>...click on place type to restart</p></div>
+
+
+
 </body>
 </html>

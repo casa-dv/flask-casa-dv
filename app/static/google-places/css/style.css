@@ -1,3 +1,4 @@
+@import url(https://fonts.googleapis.com/css?family=Dancing+Script:400,700);
 html, body, #wrapper{
     height: 100%;
     width: 100%;
@@ -5,16 +6,17 @@ html, body, #wrapper{
 }
 
 #header{
-    height: 15%;
+    height: 0%;
     width: 100%;
 }
 
 #map-canvas{
+    top: 10%;
     height: 800px;
     width: 800px;
-    top:95px;
+    /*top:95px;*/
     float:right;
-    right:9.5%;
+    right:5%;
     border-radius: 50%;
 }
 
@@ -25,92 +27,119 @@ html, body, #wrapper{
     background-color:#97a4c3;
 }
 
+
 #titleHeader{
+   
+    padding-top: 30px;
+    padding-left: 50px;
     position: absolute;
-    font-family: 'Roboto', serif;
-    font-weight: bold;
-    font-size: 30px;
-    top: 5%;
-    left: 7%;
-    color: #000000;
-    text-align: center;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 700;
+    font-size: 50px;
+    height: 70px;
+    width: 100%;
+    color:#4c619a ;
+    text-align: left;
 }
+
+#button-description{
+    position: absolute;
+    left: 15px;
+    top: 130px;
+    height:30px;
+    width: 200px;
+    font-family: 'Roboto', sans-serif;
+    text-align: left;
+    color:#4c619a ;
+}
+
 
 #place_name{
     position:absolute;
-    font-family: 'Roboto', sans-serif;
+    font-family:'Dancing Script', cursive;  
     font-size: 30px;
-    color: #000000;
-    top: 25%;
+    top: 260px;
     float:left;
-    left:7%;
+    left:4%;
     text-align:center;
+     color:#4c619a ;
 }
 
 #place_number{
     position:absolute;
     font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    color: #000000;
-    top: 33%;
+    font-size: 15px;
+    color:#4c619a ;
+    top: 300px;
     float:left;
-    left:7%;
-    text-align:center;
+    left:4%;
+    text-align:left; 
 }
 
 #place_address{
     position:absolute;
     font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    color: #000000;
-    top: 30%;
+    font-size: 15px;
+        width:30%; 
+   color:#4c619a ;
+    top: 320px;
     float:left;
-    left:7%;
-    text-align:center;
+    left:4%;
+    text-align:left; 
 }
 
 #place_website{
     position:absolute;
     font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    color: #000000;
-    top: 36%;
+    font-size: 15px;
+ color:#4c619a ;
+    top: 340px;
     float:left;
-    left:7%;
-    text-align:center;
+    left:4%;
+    text-align:center; 
 }
 
 #place_distance{
     position:absolute;
     font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    color: #000000;
-    top: 39%;
+    font-size: 15px;
+    color:#4c619a ;
+    top: 360px;
     float:left;
-    left:7%;
-    text-align:center;
+    left:4%;
+    text-align:center; 
 }
 
 #place_price_level{
     position:absolute;
     font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    color: #000000;
-    top: 42%;
+    font-size: 15px;
+    color:#4c619a ;
+    top: 380px;
     float:left;
-    left:7%;
-    text-align:center;
+    left:4%;
+    text-align:center; 
 }
 
 #place_rating{
     position:absolute;
     font-family: 'Roboto', sans-serif;
-    font-size: 20px;
-    color: #000000;
-    top: 45%;
+    font-size: 15px;
+    color:#4c619a ;
+    top: 400px;
     float:left;
-    left:7%;
-    text-align:center;
+    left:4%;
+    text-align:center; 
+}
+
+#place_reviews_background{
+    height:10%;
+    width:30%;
+    position:absolute;
+    top:420px;
+    float:left;
+    left:4%;
+    background-color: transparent;
 }
 
 #distance1{
@@ -118,9 +147,10 @@ html, body, #wrapper{
     height:2%;
     width:30%;
     float:left;
-    left:7%;
+    left:4%;
     top:39%;
     background-color:#e2e2e2;
+     color:#4c619a ;
 }
 
 #distance2{
@@ -128,63 +158,101 @@ html, body, #wrapper{
     height:2%;
     width:30%;
     float:left;
-    left:7%;
+    left:4%;
     top:39%;
     background-color:#0006ff;
+     color:#4c619a ;
 }
 
 #place_reviews{
     position:absolute;
     font-family: 'Roboto', sans-serif;
-    font-size: 15px;
-    color: #000000;
-    top: 50%;
+    font-size: 10px;
+    color:#4c619a ;
+    top: 440px;
     float:left;
-    left:7%;
+    left:4%;
     text-align:justify;
-    width:30%;
+    width:25%; 
     overflow-y:scroll;
     height:10%;
-    background-color: #e2e2e2;
-    padding: 5px;
+    background-color: transparent;
+    
 }
 
 #place_photos{
     position:absolute;
-    top:10%;
+    top:420px;
     float:left;
-    left:7%;
+    left:4%;
+    color:#4c619a ;
 }
+
 
 #chart{
     position:absolute;
-    top:65%;
+    top:600px;
+    width: 100px;
     float:left;
-    left:7%;
+    left:4%;
+    color:#4c619a ;
 }
 
 #buttons{
     position:absolute;
-    left: 7%;
-    top: 15%;
+    left: 10px;
+    top: 160px;
+  
+}
+#buttons2{
+    position:absolute;
+    left: 80px;
+    top: 160px;
+  
+}
+
+.roundbuttons{
+    
 }
 button {
     height: 60px;
     width: 60px;
-    background-color: transparent;
-    border: none;
-    outline: none;
     cursor: pointer;
+    background-color: transparent;
+    border-radius: 50%;
 }
 
-#buttonsreviews {
+/*#buttonsreviews {
     position:absolute;
     left:38%;
     top:60%;
-}
+}*/
 
 #background{
     position:absolute;
     width: 100%;
     height: 100%;
+}
+
+#master01{  
+position: absolute; top:580px; width:150px;  
+  height:15px; left: 15px; 
+}
+#master02{  
+position: absolute; width:150px;  top:620px; 
+  height:15px; left: 15px; 
+}
+#master03{  
+   position: absolute; width:150px;  top:660px; 
+  height:15px; left: 15px; 
+}
+#sliderheader{
+    position: absolute;
+    left: 10px;
+    top: 510px;
+    height:20px;
+    width: 300px;
+    font-family: 'Roboto', sans-serif;
+    text-align: left;
+    color:#4c619a ;
 }
