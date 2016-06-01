@@ -32,7 +32,7 @@ APP = (function () {
 	}
 
 	// round back to last hour
-	var now = APP.now = moment().valueOf() - (moment().valueOf() % (60*60*1000));
+	var now = APP.now = Math.round(moment().valueOf() / (60*60*1000)) * 60*60*1000;
 	var then = APP.then = moment(now).add(7,'days').valueOf();
 	var radius = APP.radius = 300;
 
@@ -78,7 +78,7 @@ APP = (function () {
 	function create_timeline(slider){
 		noUiSlider.create(slider, {
 			start: now,
-			step: 1000*60*60, // ms
+			step: 1000*60*30, // ms
 			range: {
 				'min': now,
 				'max': then
@@ -122,7 +122,7 @@ APP = (function () {
 		return slider;
 	}
 	function onSliderUpdate( values, handle ) {
-		var sliderTime = window.sliderTime = parse_slider_value(values);
+		var sliderTime = APP.sliderTime = parse_slider_value(values);
 
 		// label Mon 12:05
 		var time = moment(sliderTime).format("ddd HH:mm");
@@ -796,8 +796,16 @@ APP = (function () {
 	}
 
 	function draw(){
+		console.log("tick");
+
 		// move slider
-		// loop through filters
+		var newSliderTime = APP.sliderTime + 60*60*1000; // must be multiple of slider step
+		if (newSliderTime > APP.then){
+			newSliderTime = APP.now;
+		}
+		APP.slider.noUiSlider.set(newSliderTime);
+
+		_.delay(draw, 2000);
 	}
 
 	function setup(){
@@ -822,13 +830,14 @@ APP = (function () {
 		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=park",load_places_park);
 		d3.json(base_url+"/places?lat="+location.lat+"&lon="+location.lng+"&type=atm",load_places_atm);
 
-		var slider = document.getElementById('timeline');
+		var slider = APP.slider = document.getElementById('timeline');
 		create_timeline(slider);
 
 		APP.sliderTime = now;
 
-		if(autoplay){
-			window.requestAnimationFrame(draw);
+		if(document.location.search.match("autoplay=true")){
+			console.log("autoplaying");
+			_.delay(draw, 5000);
 		}
 		document.querySelector("#details_places form").addEventListener("change",place_type_change);
 		document.querySelector("#details_events form").addEventListener("change",event_type_change);
