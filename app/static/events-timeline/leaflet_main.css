@@ -1,5 +1,15 @@
-h1,h2 {
-	color: pink;
+@font-face {
+    font-family: 'bebas_neue';
+    src: url('/static/fonts/bebasneue_bold-webfont.woff2') format('woff2'),
+         url('/static/fonts/bebasneue_bold-webfont.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+h1{
+    font-family: 'bebas_neue', sans-serif;
+    text-align: center;
+    color: #ddd;
+    font-size: 5em;
 }
 html, body {
 	height: 90%;
